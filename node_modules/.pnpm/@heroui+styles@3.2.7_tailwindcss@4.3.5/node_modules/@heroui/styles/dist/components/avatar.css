@@ -1,0 +1,101 @@
+/* Base avatar styles */
+.avatar {
+  /* Shape tokens. AvatarGroup's clip seam traces `--avatar-radius`, so the
+     radius has to live in a custom property rather than a `rounded-*` utility.
+     The steps are spelled out instead of read from `--radius-3xl` /
+     `--radius-2xl`, which resolve once at `:root` and would ignore a scoped
+     `--radius`. */
+  --avatar-size: 2.5rem; /* size-10 — same as --md */
+  --avatar-radius: calc(var(--radius) * 3); /* rounded-3xl */
+
+  @apply relative flex size-10 shrink-0 items-center justify-center overflow-hidden bg-default;
+
+  border-radius: var(--avatar-radius);
+}
+
+/* Avatar fallback element */
+.avatar__fallback {
+  @apply flex size-full items-center justify-center bg-default text-sm font-medium;
+}
+
+/* Avatar image element */
+.avatar__image {
+  @apply absolute inset-0 aspect-square size-full;
+
+  /**
+   * Transitions
+   */
+  @apply transition-opacity duration-250 motion-reduce:transition-none;
+}
+
+/* Size modifiers */
+.avatar--sm {
+  --avatar-size: 2rem; /* size-8 */
+  --avatar-radius: calc(var(--radius) * 2); /* rounded-2xl */
+
+  @apply size-8;
+
+  .avatar__fallback {
+    @apply text-xs;
+  }
+}
+
+.avatar--md {
+  /* No layout styles as this is the default size */
+}
+
+.avatar--lg {
+  --avatar-size: 3rem; /* size-12 */
+
+  @apply size-12;
+
+  .avatar__fallback {
+    @apply text-base;
+  }
+}
+
+/* Color modifiers for fallback */
+.avatar__fallback--accent {
+  @apply text-accent-soft-foreground;
+}
+
+.avatar__fallback--default {
+  @apply text-default-soft-foreground;
+}
+
+.avatar__fallback--success {
+  @apply text-success-soft-foreground;
+}
+
+.avatar__fallback--warning {
+  @apply text-warning-soft-foreground;
+}
+
+.avatar__fallback--danger {
+  @apply text-danger-soft-foreground;
+}
+
+/* Variant modifiers */
+.avatar--soft {
+  @apply bg-transparent;
+}
+
+.avatar--soft .avatar__fallback--accent {
+  @apply bg-accent-soft text-accent-soft-foreground;
+}
+
+.avatar--soft .avatar__fallback--success {
+  @apply bg-success-soft text-success-soft-foreground;
+}
+
+.avatar--soft .avatar__fallback--warning {
+  @apply bg-warning-soft text-warning-soft-foreground;
+}
+
+.avatar--soft .avatar__fallback--default {
+  @apply bg-default-soft text-default-soft-foreground;
+}
+
+.avatar--soft .avatar__fallback--danger {
+  @apply bg-danger-soft text-danger-soft-foreground;
+}

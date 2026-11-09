@@ -1,0 +1,131 @@
+/* use textarea instead of text-area to avoid conflict with Tailwind `text-` prefix */
+.textarea {
+  @apply rounded-field border bg-field px-3 py-2 text-base text-field-foreground shadow-field outline-none placeholder:text-field-placeholder sm:text-sm;
+
+  min-height: 38px;
+
+  border-width: var(--border-width-field);
+  border-color: var(--field-border);
+
+  /* Current fill. States reassign `--textarea-bg`; variants override the three tokens. */
+  --textarea-bg: var(--color-field);
+  --textarea-bg-hover: var(--color-field-hover);
+  --textarea-bg-focus: var(--field-focus);
+  /* Inset layer covers the UA autofill paint. The rest keeps shadow-field and the focus ring. */
+  --textarea-autofill-shadow:
+    0 0 0 1000px var(--textarea-bg) inset, var(--tw-inset-shadow, 0 0 #0000),
+    var(--tw-inset-ring-shadow, 0 0 #0000), var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000);
+
+  /**
+   * Transitions
+   * CRITICAL: motion-reduce must be AFTER transition for correct override specificity
+   */
+  transition:
+    background-color 150ms var(--ease-smooth),
+    border-color 150ms var(--ease-smooth),
+    box-shadow 150ms var(--ease-out);
+  @apply motion-reduce:transition-none;
+
+  @media (hover: hover) {
+    &:hover:not(:focus):not(:focus-visible),
+    &[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
+      @apply bg-field-hover;
+      --textarea-bg: var(--textarea-bg-hover);
+      border-color: var(--field-border-hover);
+    }
+  }
+
+  /* Focus state */
+  &:focus,
+  &[data-focused="true"] {
+    @apply status-focused-field;
+    border-color: var(--field-border-focus);
+    --textarea-bg: var(--textarea-bg-focus);
+    background-color: var(--textarea-bg);
+  }
+
+  &[data-invalid="true"] {
+    @apply status-invalid-field;
+    --textarea-bg: var(--textarea-bg-focus);
+    background-color: var(--textarea-bg);
+  }
+
+  /* Disabled state */
+  &:disabled,
+  &[data-disabled="true"],
+  &[aria-disabled="true"] {
+    @apply status-disabled;
+  }
+
+  /**
+   * Browser autofill (`:-webkit-autofill` in Chromium, `:autofill` in Firefox).
+   * The user agent paints its own background over the author background, which
+   * drops `.textarea--secondary`'s fill. Cover that paint with `--textarea-bg`
+   * (the variant's current fill) and keep the field foreground. Border stays on
+   * the rules above. The long background-color transition stops Chromium's
+   * highlight from fading in. box-shadow is not transitioned: the 1000px inset
+   * must appear at once, or the highlight shows while that cover grows in from 0.
+   */
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active,
+  &:autofill,
+  &:autofill:hover,
+  &:autofill:focus,
+  &:autofill:active {
+    background-color: var(--textarea-bg);
+    box-shadow: var(--textarea-autofill-shadow);
+    -webkit-box-shadow: var(--textarea-autofill-shadow);
+    -webkit-text-fill-color: var(--field-foreground);
+    caret-color: var(--field-foreground);
+    transition:
+      background-color 9999s ease-in-out 0s,
+      border-color 150ms var(--ease-smooth);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: background-color 9999s ease-in-out 0s;
+    }
+  }
+}
+
+/* Variant property definitions */
+.textarea--primary {
+  /* Default styles */
+}
+
+.textarea--secondary {
+  @apply shadow-none;
+  background-color: var(--textarea-bg);
+
+  --textarea-bg: var(--default);
+  --textarea-bg-hover: var(--default-hover);
+  --textarea-bg-focus: var(--default);
+
+  @media (hover: hover) {
+    &:hover:not(:focus):not(:focus-visible),
+    &[data-hovered="true"]:not([data-focused="true"]):not([data-focus-visible="true"]) {
+      --textarea-bg: var(--textarea-bg-hover);
+      background-color: var(--textarea-bg);
+    }
+  }
+
+  &:focus,
+  &[data-focused="true"] {
+    --textarea-bg: var(--textarea-bg-focus);
+    background-color: var(--textarea-bg);
+  }
+
+  /* Invalid state */
+  &[data-invalid="true"] {
+    @apply status-invalid-field;
+    --textarea-bg: var(--textarea-bg-focus);
+    background-color: var(--textarea-bg);
+  }
+}
+
+/* Full width modifier */
+.textarea--full-width {
+  @apply w-full;
+}

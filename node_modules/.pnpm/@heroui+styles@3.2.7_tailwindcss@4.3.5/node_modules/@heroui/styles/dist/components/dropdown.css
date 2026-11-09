@@ -1,0 +1,153 @@
+/* ==========================================================================
+   Base dropdown styles
+   ========================================================================== */
+
+.dropdown {
+  @apply flex flex-col gap-1;
+}
+
+.dropdown__trigger {
+  @apply inline-block;
+  /* Only visible when using a custom trigger  - not passing "Button" as a child - hence we use some button styles (custom trigger) */
+  @apply outline-none;
+  /**
+   * Transitions
+   * CRITICAL: motion-reduce must be AFTER transition for correct override specificity
+   */
+  transition:
+    transform 250ms var(--ease-out-quart),
+    background-color 150ms var(--ease-smooth),
+    box-shadow 150ms var(--ease-out);
+  @apply transform-gpu motion-reduce:transition-none;
+
+  /* Cursor */
+  cursor: var(--cursor-interactive);
+
+  /* Focus state */
+  &:focus-visible:not([data-focused]),
+  &[data-focus-visible="true"] {
+    @apply status-focused;
+  }
+
+  /* Disabled state */
+  &:disabled,
+  &[aria-disabled="true"] {
+    @apply status-disabled;
+  }
+
+  /* Pending state */
+  &[data-pending="true"] {
+    @apply status-pending;
+  }
+
+  /* Default active/pressed state - scale transform */
+  &:active,
+  &[data-pressed="true"] {
+    transform: scale(0.97);
+  }
+}
+
+/* Similar to select popover styles */
+.dropdown__popover {
+  @apply origin-(--trigger-anchor-point) scroll-py-1 scrollbar overflow-y-auto overscroll-contain bg-overlay p-0 text-sm;
+  /*
+   * Same floor as min-w-55 on every viewport, capped to the screen minus a 2rem
+   * inset. 48svw was narrower than that floor on a phone and collapsed row icons.
+   */
+  min-width: min(calc(var(--spacing) * 55), 100%, calc(100svw - 2rem));
+  max-width: min(100%, calc(100svw - 2rem));
+  border-radius: min(32px, calc(var(--radius-2xl) + var(--spacing) * 1.5));
+  box-shadow: var(--overlay-shadow);
+
+  /* Focus state */
+  &:focus-visible:not([data-focused]),
+  &[data-focus-visible="true"] {
+    @apply outline-none;
+  }
+
+  /* Entering animations */
+  &[data-entering="true"] {
+    animation: heroui-overlay-enter-90 150ms var(--ease-smooth);
+
+    /* Placement-specific translations */
+    &[data-placement="top"] {
+      animation-name: heroui-overlay-enter-90-y;
+    }
+
+    &[data-placement="bottom"] {
+      animation-name: heroui-overlay-enter-90-ny;
+    }
+
+    &[data-placement="left"] {
+      animation-name: heroui-overlay-enter-90-x;
+    }
+
+    &[data-placement="right"] {
+      animation-name: heroui-overlay-enter-90-nx;
+    }
+  }
+
+  /* Exiting animations.
+     The placement `animation-name` above is more specific than this shorthand, so repeat
+     the name for an exiting popover that still has `data-placement`.
+     Leave the fill mode at `none`. `forwards` / `both` make WebKit skip this animation
+     and jump to the last keyframe, so the menu disappears instead of closing. */
+  &[data-exiting="true"],
+  &[data-exiting="true"][data-placement] {
+    animation: heroui-overlay-exit 100ms var(--ease-smooth);
+    /* Stays non-interactive while closing, even if the exit animation is interrupted. */
+    @apply pointer-events-none;
+  }
+
+  /*
+   * Touch devices hide this popover (inline opacity, clip, clip-path, mask) until
+   * React Aria decides a software keyboard is not opening. That wait is ~800ms, so
+   * a second tap closes the menu before it is ever shown. Once it has a placement,
+   * show it. The enter animation is skipped on these devices so the late callback
+   * cannot hide it again. The close animation still owns opacity while exiting.
+   */
+  @media (hover: none) and (pointer: coarse) {
+    &[data-placement]:not([data-exiting="true"]) {
+      opacity: 1 !important;
+      clip: auto !important;
+      clip-path: none !important;
+      mask-image: none !important;
+    }
+  }
+
+  /* Arrow styling */
+  & [data-slot="popover-overlay-arrow"] {
+    fill: var(--overlay);
+  }
+
+  /* Arrow rotation based on placement */
+  &[data-placement="bottom"] [data-slot="popover-overlay-arrow"] {
+    rotate: 180deg;
+  }
+
+  &[data-placement="left"] [data-slot="popover-overlay-arrow"] {
+    rotate: -90deg;
+  }
+
+  &[data-placement="right"] [data-slot="popover-overlay-arrow"] {
+    rotate: 90deg;
+  }
+
+  /* Menu styles */
+  [data-slot="dropdown-menu"] {
+    @apply p-1.5 outline-none;
+  }
+
+  [data-slot="menu-item"] {
+    @apply px-2.5;
+  }
+}
+
+.dropdown__menu {
+  @apply relative flex w-full flex-col gap-0.5 overflow-clip p-1;
+
+  /* This makes the separator take up 94% of the width and be centered */
+  [data-slot="separator"] {
+    @apply ms-[3%] w-[94%];
+  }
+}

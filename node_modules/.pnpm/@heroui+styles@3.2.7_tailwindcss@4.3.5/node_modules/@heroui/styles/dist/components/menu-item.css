@@ -1,0 +1,171 @@
+/* ==========================================================================
+   Base menu item styles
+   ========================================================================== */
+
+.menu-item {
+  @apply relative flex min-h-9 w-full items-center justify-start gap-3 rounded-2xl px-2 py-1.5 outline-none no-highlight;
+
+  /**
+   * Transitions
+   * CRITICAL: motion-reduce must be AFTER transition for correct override specificity
+   */
+  transition:
+    transform 250ms var(--ease-out-quart),
+    box-shadow 150ms var(--ease-out);
+
+  @apply motion-reduce:transition-none;
+
+  /* Cursor */
+  cursor: var(--cursor-interactive);
+
+  [data-slot="label"] {
+    @apply pointer-events-none w-fit select-none;
+  }
+
+  [data-slot="description"] {
+    @apply pointer-events-none text-wrap select-none;
+  }
+
+  [data-slot="submenu-indicator"] svg {
+    @apply size-3.5;
+  }
+
+  /* Inline-start room for a start-side selection indicator.
+     The submenu chevron uses `.menu-item__indicator` too, but it sits on the
+     inline-end, so it must not take this padding. Excluding every submenu row
+     would also drop the room a checkmark needs when the row has both. */
+  &:has(.menu-item__indicator:not(.menu-item__indicator--submenu)) {
+    @apply ps-7;
+  }
+
+  /* Inline-end room for the submenu chevron.
+     Start padding is left to context (base `.menu-item` `px-2`, or a parent override). */
+  &[data-has-submenu="true"]:has(.menu-item__indicator--submenu) {
+    @apply pe-7;
+  }
+
+  /* Focus visible state (keyboard focus only).
+     React Aria always sets data-focused when it owns the item, so the native
+     fallback is scoped to consumers rendering this class outside React Aria. */
+  &:focus-visible:not([data-focused]),
+  &[data-focus-visible="true"] {
+    @apply status-focused;
+  }
+
+  /* Focus state */
+  &:focus,
+  &[data-focus="true"] {
+  }
+
+  /* Pressed state */
+  &:active,
+  &[data-pressed="true"] {
+    @apply will-change-transform;
+    transform: scale(0.98);
+  }
+
+  /* Hover state */
+  @media (hover: hover) {
+    &:hover,
+    &[data-hovered="true"] {
+      @apply bg-default;
+    }
+  }
+
+  /* Selected state */
+  &[aria-checked="true"],
+  &[aria-selected="true"],
+  &[data-selected="true"] {
+    [data-slot="menu-item-indicator--checkmark"] {
+      /**
+     * Transitions
+     * CRITICAL: motion-reduce must be AFTER transition for correct override specificity
+     */
+      transition: stroke-dashoffset 100ms linear;
+      @apply motion-reduce:transition-none;
+    }
+
+    [data-slot="menu-item-indicator--dot"] {
+      /**
+       * Selected state: visible and scaled up
+       */
+      @apply scale-100 opacity-100;
+    }
+  }
+
+  /* Disabled state */
+  &[data-disabled="true"] {
+    @apply status-disabled;
+  }
+}
+
+/* ==========================================================================
+   Menu item indicator
+   ========================================================================== */
+
+.menu-item__indicator {
+  @apply absolute start-2 top-1/2 flex size-4 shrink-0 -translate-y-1/2 items-center justify-center text-muted;
+
+  /**
+   * Transitions
+   */
+  @apply transition duration-250 motion-reduce:transition-none;
+
+  /* Checkmark SVG indicator */
+  [data-slot="menu-item-indicator--checkmark"] {
+    @apply size-2.5;
+
+    .menu-item[data-selection-mode="multiple"] & {
+      /**
+       * Transitions
+       */
+      @apply transition-all duration-300 motion-reduce:transition-none;
+    }
+  }
+
+  /* Dot SVG indicator */
+  [data-slot="menu-item-indicator--dot"] {
+    @apply size-2;
+
+    .menu-item[data-selection-mode="multiple"] & {
+      /**
+     * Transitions
+     */
+      @apply transition-all duration-250 motion-reduce:transition-none;
+    }
+    /**
+     * Default state: hidden and scaled down
+     */
+    @apply scale-70 opacity-0;
+  }
+}
+
+/* Submenu indicator (chevron-right).
+   Only the chevron moves to the inline-end. A selection indicator on the same
+   row keeps the start position from `.menu-item__indicator`. */
+.menu-item__indicator--submenu {
+  @apply text-muted;
+
+  .menu-item[data-has-submenu="true"] & {
+    @apply start-auto end-2;
+  }
+
+  svg {
+    @apply size-3;
+  }
+}
+
+/* Default variant */
+.menu-item--default {
+}
+
+/* Danger variant */
+.menu-item--danger {
+  .menu-item__indicator {
+    @apply text-danger;
+  }
+
+  [data-slot="label"] {
+    @apply text-danger;
+  }
+}

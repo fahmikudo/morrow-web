@@ -1,0 +1,97 @@
+/* ==========================================================================
+   AvatarGroup - Stacked or grid layout for multiple avatars
+   ========================================================================== */
+
+.avatar-group {
+  --avatar-group-overlap: 0.5rem;
+  --avatar-group-seam: 2px;
+
+  @apply inline-flex items-center;
+}
+
+/* Grid */
+.avatar-group--grid {
+  @apply flex-wrap gap-3;
+}
+
+.avatar-group:not(.avatar-group--grid) > .avatar + .avatar,
+.avatar-group:not(.avatar-group--grid) > .avatar + .avatar-group__count {
+  margin-inline-start: calc(-1 * var(--avatar-group-overlap, 0.5rem));
+}
+
+.avatar-group__count {
+  @apply shrink-0;
+}
+
+/* --------------------------------------------------------------------------
+   Overlap: ring
+   -------------------------------------------------------------------------- */
+.avatar-group--ring:not(.avatar-group--grid) > .avatar,
+.avatar-group--ring:not(.avatar-group--grid) > .avatar-group__count {
+  position: relative;
+  box-shadow: 0 0 0 var(--avatar-group-seam, 2px) var(--background);
+}
+
+/* --------------------------------------------------------------------------
+   Overlap: clip
+   The seam traces the next avatar's own outline — its `--avatar-radius` grown
+   by the seam width — so a themed `--radius` reshapes avatars and seams
+   together. CSS has no rounded-rect mask image, so that outline is assembled
+   from a tall bar, a wide bar and four corner arcs, then XOR-ed out of a fully
+   opaque layer.
+   Cut sits on the inline-end edge (LTR: right / RTL: left). Optical nudge uses
+   padding-inline-end so fallback glyphs stay logical in both directions.
+   -------------------------------------------------------------------------- */
+.avatar-group--clip:not(.avatar-group--grid) > .avatar:not(:last-child) {
+  --avatar-group-cut-size: calc(var(--avatar-size, 2.5rem) + 2 * var(--avatar-group-seam, 2px));
+  /* Browsers clamp a border-radius at half the box, so clamp here too — a
+     themed radius above that ceiling paints a circle, not an overshooting arc. */
+  --avatar-group-cut-radius: calc(
+    min(
+        var(--avatar-radius, calc(var(--avatar-size, 2.5rem) / 2)),
+        calc(var(--avatar-size, 2.5rem) / 2)
+      ) +
+      var(--avatar-group-seam, 2px)
+  );
+  --avatar-group-cut-diameter: calc(2 * var(--avatar-group-cut-radius));
+  /* Length of the straight run between two corner arcs. Collapses to 0 on a
+     circular avatar, which leaves the four arcs forming one circle. */
+  --avatar-group-cut-span: calc(var(--avatar-group-cut-size) - var(--avatar-group-cut-diameter));
+  --avatar-group-cut-x: calc(
+    var(--avatar-size, 2.5rem) - var(--avatar-group-overlap, 0.5rem) - var(--avatar-group-seam, 2px)
+  );
+  --avatar-group-cut-y: calc(-1 * var(--avatar-group-seam, 2px));
+  --avatar-group-cut-x2: calc(var(--avatar-group-cut-x) + var(--avatar-group-cut-span));
+  --avatar-group-cut-y2: calc(var(--avatar-group-cut-y) + var(--avatar-group-cut-span));
+  --avatar-group-cut-fill: linear-gradient(#000 0 0);
+  --avatar-group-cut-arc: radial-gradient(circle closest-side, #000 99%, #0000);
+
+  mask:
+    var(--avatar-group-cut-fill) 0 0 / 100% 100% no-repeat exclude,
+    var(--avatar-group-cut-fill) calc(var(--avatar-group-cut-x) + var(--avatar-group-cut-radius))
+      var(--avatar-group-cut-y) / var(--avatar-group-cut-span) var(--avatar-group-cut-size)
+      no-repeat add,
+    var(--avatar-group-cut-fill) var(--avatar-group-cut-x)
+      calc(var(--avatar-group-cut-y) + var(--avatar-group-cut-radius)) /
+      var(--avatar-group-cut-size) var(--avatar-group-cut-span) no-repeat add,
+    var(--avatar-group-cut-arc) var(--avatar-group-cut-x) var(--avatar-group-cut-y) /
+      var(--avatar-group-cut-diameter) var(--avatar-group-cut-diameter) no-repeat add,
+    var(--avatar-group-cut-arc) var(--avatar-group-cut-x2) var(--avatar-group-cut-y) /
+      var(--avatar-group-cut-diameter) var(--avatar-group-cut-diameter) no-repeat add,
+    var(--avatar-group-cut-arc) var(--avatar-group-cut-x) var(--avatar-group-cut-y2) /
+      var(--avatar-group-cut-diameter) var(--avatar-group-cut-diameter) no-repeat add,
+    var(--avatar-group-cut-arc) var(--avatar-group-cut-x2) var(--avatar-group-cut-y2) /
+      var(--avatar-group-cut-diameter) var(--avatar-group-cut-diameter) no-repeat add;
+}
+
+.avatar-group--clip:not(.avatar-group--grid):dir(rtl) > .avatar:not(:last-child),
+:dir(rtl) .avatar-group--clip:not(.avatar-group--grid) > .avatar:not(:last-child) {
+  --avatar-group-cut-x: calc(
+    var(--avatar-group-overlap, 0.5rem) - var(--avatar-size, 2.5rem) - var(--avatar-group-seam, 2px)
+  );
+}
+
+.avatar-group--clip:not(.avatar-group--grid) > .avatar:not(:last-child) .avatar__fallback {
+  box-sizing: border-box;
+  padding-inline-end: calc(var(--avatar-group-overlap, 0.5rem) * 0.35);
+}

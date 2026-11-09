@@ -1,0 +1,95 @@
+/* Popover component styles */
+
+/* Base popover styles */
+.popover {
+  @apply origin-(--trigger-anchor-point) bg-overlay p-0 text-sm;
+  border-radius: min(32px, var(--radius-3xl));
+  box-shadow: var(--overlay-shadow);
+
+  /* Entering animations */
+  &[data-entering="true"] {
+    animation: heroui-overlay-enter-90 150ms var(--ease-smooth);
+
+    /* Placement-specific translations */
+    &[data-placement="top"] {
+      animation-name: heroui-overlay-enter-90-y;
+    }
+
+    &[data-placement="bottom"] {
+      animation-name: heroui-overlay-enter-90-ny;
+    }
+
+    &[data-placement="left"] {
+      animation-name: heroui-overlay-enter-90-x;
+    }
+
+    &[data-placement="right"] {
+      animation-name: heroui-overlay-enter-90-nx;
+    }
+  }
+
+  /* Exit must outrank the placement `animation-name` above. Fill stays `none` so WebKit plays it. */
+  &[data-exiting="true"],
+  &[data-exiting="true"][data-placement] {
+    animation: heroui-overlay-exit 100ms var(--ease-smooth);
+    /* Stays non-interactive while closing, even if the exit animation is interrupted. */
+    @apply pointer-events-none;
+  }
+
+  /* Arrow styling */
+  & [data-slot="popover-overlay-arrow"] {
+    fill: var(--overlay);
+  }
+
+  /* Arrow rotation based on placement */
+  &[data-placement="bottom"] [data-slot="popover-overlay-arrow"] {
+    rotate: 180deg;
+  }
+
+  &[data-placement="left"] [data-slot="popover-overlay-arrow"] {
+    rotate: -90deg;
+  }
+
+  &[data-placement="right"] [data-slot="popover-overlay-arrow"] {
+    rotate: 90deg;
+  }
+}
+
+/* Popover dialog */
+.popover__dialog {
+  @apply p-4 outline-none;
+}
+
+/* Popover heading */
+.popover__heading {
+  @apply font-medium;
+}
+
+/* Popover trigger */
+.popover__trigger {
+  @apply inline-block;
+
+  /**
+   * Transitions
+   * CRITICAL: motion-reduce must be AFTER transition for correct override specificity
+   */
+  transition:
+    color 150ms var(--ease-smooth),
+    background-color 150ms var(--ease-smooth),
+    box-shadow 150ms var(--ease-out);
+  @apply motion-reduce:transition-none;
+
+  cursor: var(--cursor-interactive);
+
+  /* Focus state */
+  &:focus-visible:not([data-focused]),
+  &[data-focus-visible="true"] {
+    @apply status-focused;
+  }
+
+  /* Disabled state */
+  &:disabled,
+  &[aria-disabled="true"] {
+    @apply status-disabled;
+  }
+}

@@ -1,0 +1,187 @@
+/* Search field styles */
+.search-field {
+  @apply flex flex-col gap-1;
+
+  &[data-invalid="true"],
+  &[aria-invalid="true"] {
+    [data-slot="description"] {
+      @apply hidden;
+    }
+  }
+
+  [data-slot="label"] {
+    @apply w-fit;
+  }
+
+  &[data-empty="true"] {
+    [data-slot="search-field-clear-button"] {
+      @apply pointer-events-none opacity-0;
+    }
+  }
+}
+
+.search-field__group {
+  @apply relative inline-flex h-9 items-center overflow-hidden rounded-field border bg-field text-sm text-field-foreground shadow-field outline-none;
+  border-width: var(--border-width-field);
+  border-color: var(--field-border);
+
+  /* Current fill. States reassign `--search-field-group-bg`; variants override the three tokens. */
+  --search-field-group-bg: var(--color-field);
+  --search-field-group-bg-hover: var(--color-field-hover);
+  --search-field-group-bg-focus: var(--field-focus);
+
+  /**
+   * Transitions
+   * CRITICAL: motion-reduce must be AFTER transition for correct override specificity
+   */
+  transition:
+    background-color 150ms var(--ease-smooth),
+    border-color 150ms var(--ease-smooth),
+    box-shadow 150ms var(--ease-out);
+  @apply motion-reduce:transition-none;
+
+  /* Hover state */
+  @media (hover: hover) {
+    &:hover:not(:focus-within),
+    &[data-hovered="true"]:not([data-focus-within="true"]) {
+      @apply bg-field-hover;
+      --search-field-group-bg: var(--search-field-group-bg-hover);
+      border-color: var(--field-border-hover);
+    }
+  }
+
+  /* Focus within state */
+  &[data-focus-within="true"],
+  &:focus-within {
+    @apply status-focused-field;
+  }
+
+  /* Invalid state */
+  &[data-invalid="true"] {
+    @apply status-invalid-field;
+    --search-field-group-bg: var(--search-field-group-bg-focus);
+    background-color: var(--search-field-group-bg);
+    border-color: var(--color-field-border-invalid);
+  }
+
+  /* Disabled state */
+  &[data-disabled="true"],
+  &[aria-disabled="true"] {
+    @apply status-disabled;
+  }
+}
+
+.search-field__input {
+  @apply flex-1 rounded-none border-0 bg-transparent px-3 py-2 text-base shadow-none outline-none sm:text-sm;
+
+  /* Hide browser default search clear button */
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Remove border radius on left side when search icon is present */
+  .search-field__group:has([data-slot="search-field-search-icon"]) & {
+    @apply rounded-s-none ps-2;
+  }
+
+  /* Remove border radius on right side when clear button is present */
+  .search-field__group:has([slot="clear"]) & {
+    @apply rounded-e-none pe-2;
+  }
+
+  /* Focus state - handled by group */
+  &:focus,
+  &:focus-visible {
+    @apply outline-none;
+  }
+
+  /**
+   * Cover the UA autofill paint with the group's own fill so the icon, input,
+   * and clear button stay one color. `--search-field-group-bg` is inherited
+   * from `.search-field__group` and already tracks the variant.
+   * box-shadow is not transitioned: the 1000px inset must appear at once.
+   */
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active,
+  &:autofill,
+  &:autofill:hover,
+  &:autofill:focus,
+  &:autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--search-field-group-bg) inset;
+    box-shadow: 0 0 0 1000px var(--search-field-group-bg) inset;
+    -webkit-text-fill-color: var(--field-foreground);
+    caret-color: var(--field-foreground);
+    transition: background-color 9999s ease-in-out 0s;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: background-color 9999s ease-in-out 0s;
+    }
+  }
+}
+
+.search-field__search-icon {
+  @apply pointer-events-none shrink-0 text-field-placeholder;
+  @apply ms-3 me-0 size-4;
+}
+
+.search-field__clear-button {
+  @apply me-2 size-5 shrink-0;
+
+  /* Overrides close button default icon size from 16px to 12px */
+  [data-slot="close-button-icon"] {
+    @apply size-3;
+  }
+}
+
+/* Variant property definitions */
+.search-field--primary {
+  /* Default styles */
+}
+
+.search-field--secondary .search-field__group {
+  @apply shadow-none;
+  background-color: var(--search-field-group-bg);
+
+  --search-field-group-bg: var(--default);
+  --search-field-group-bg-hover: var(--default-hover);
+  --search-field-group-bg-focus: var(--default);
+
+  @media (hover: hover) {
+    &:hover:not(:focus-within),
+    &[data-hovered="true"]:not([data-focus-within="true"]) {
+      --search-field-group-bg: var(--search-field-group-bg-hover);
+      background-color: var(--search-field-group-bg);
+    }
+  }
+
+  &:focus-within,
+  &[data-focus-within="true"] {
+    --search-field-group-bg: var(--search-field-group-bg-focus);
+    background-color: var(--search-field-group-bg);
+  }
+
+  /* Invalid state */
+  &[data-invalid="true"] {
+    @apply status-invalid-field;
+    border-color: var(--color-field-border-invalid);
+    --search-field-group-bg: var(--search-field-group-bg-focus);
+    background-color: var(--search-field-group-bg);
+  }
+
+  [data-slot="search-field-input"] {
+    @apply bg-transparent;
+  }
+}
+
+/* Full width modifier */
+.search-field--full-width {
+  @apply w-full;
+}
+
+.search-field__group--full-width {
+  @apply w-full;
+}

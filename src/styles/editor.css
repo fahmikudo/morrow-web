@@ -1,0 +1,153 @@
+.rich-text {
+  font-family: var(--font-sans);
+  color: var(--foreground);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.rich-text > :first-child {
+  margin-top: 0;
+}
+
+.rich-text > :last-child {
+  margin-bottom: 0;
+}
+
+.rich-text h1 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.rich-text h2 {
+  margin: 1.1rem 0 0.4rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.rich-text h3 {
+  margin: 1rem 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.rich-text p {
+  margin: 0 0 0.75rem;
+}
+
+.rich-text ul,
+.rich-text ol {
+  margin: 0 0 0.75rem;
+  padding-left: 1.35rem;
+}
+
+.rich-text ul {
+  list-style: disc;
+}
+
+.rich-text ol {
+  list-style: decimal;
+}
+
+.rich-text li {
+  margin: 0.15rem 0;
+}
+
+.rich-text li > p {
+  margin: 0;
+}
+
+.rich-text blockquote {
+  margin: 0 0 0.75rem;
+  border-left: 2px solid var(--border);
+  padding-left: 0.85rem;
+  color: var(--muted);
+}
+
+.rich-text pre {
+  margin: 0 0 0.75rem;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: var(--surface-secondary);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.rich-text code {
+  border-radius: 0.25rem;
+  background: var(--surface-secondary);
+  padding: 0.1rem 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+.rich-text pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.rich-text a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rich-text hr {
+  margin: 1rem 0;
+  border-color: var(--border);
+}
+
+.tiptap {
+  padding: 1rem 1.25rem;
+  outline: none;
+}
+
+.tiptap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.rich-text .tableWrapper {
+  margin: 0 0 0.75rem;
+  overflow-x: auto;
+}
+
+.rich-text table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.rich-text th,
+.rich-text td {
+  min-width: 4rem;
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.6rem;
+  vertical-align: top;
+}
+
+.rich-text th {
+  background: var(--surface-secondary);
+  font-weight: 600;
+  text-align: left;
+}
+
+.rich-text th p,
+.rich-text td p {
+  margin: 0;
+}
+
+.rich-text .selectedCell {
+  position: relative;
+}
+
+.rich-text .selectedCell::after {
+  position: absolute;
+  inset: 0;
+  background: var(--accent-soft);
+  opacity: 0.6;
+  content: '';
+  pointer-events: none;
+}
