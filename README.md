@@ -42,9 +42,9 @@ src/
   mocks/data/   seed dataset (only src/services may import this)
   stores/       Zustand UI state (sidebar, overlays, offline flag, assistant transcript)
   lib/          dates, text, ids, class names, toasts
+  contracts/    shared JSON wire fixtures (also read by the API contract tests)
 ../morrow-api/   Go API (model / repository / service / handler / router per
                        feature), Goose migrations, API + contract tests
-../contracts/          shared JSON wire fixtures (both projects read them)
 ```
 
 **Boundary rule:** only `src/services/**` imports `@/mocks`. Feature code depends on the `Repositories` contract, so the HTTP layer in `src/services/http/` replaces the mock layer without touching UI code.
@@ -75,7 +75,7 @@ HeroUI ships pill buttons; `src/index.css` overrides `.button` to the field radi
 - `SnapshotSync` seeds every read cache from `GET /snapshot`, writes it to `second-brain:snapshot:v1`, and refreshes on `online`. Offline, the cached snapshot is all the UI shows; mutations fail fast with `You are offline. Changes are disabled.` and the shell shows an offline banner.
 - Keys (`Task.key`, `Project.key`) are immutable and allocated server-side with the same algorithms the mock layer uses.
 - The DeepSeek key is stored per account on the server (`PATCH /ai` write-only `apiKey`); responses expose only `keyConfigured`, and the browser never receives the key back.
-- `../contracts/fixtures/*.json` are round-tripped by `../morrow-api/test/contracts_test.go` and `src/services/contracts.test.ts`, so a field rename breaks both suites.
+- `contracts/fixtures/*.json` are round-tripped by `../morrow-api/test/contracts_test.go` and `src/services/contracts.test.ts`, so a field rename breaks both suites.
 
 ### Colour and module identity
 
