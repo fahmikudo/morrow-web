@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — Morrow</title>
+    <meta
+      name="description"
+      content="How Morrow collects, uses, stores, and shares your data, including Google Calendar data, AI assistant requests, and Web Push notifications."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://mrrw.my.id/privacy.html" />
+    <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg" />
+    <style>
+      :root {
+        color-scheme: light;
+        --brand: #0369a1;
+        --ink: #0f172a;
+        --muted: #475569;
+        --line: #e2e8f0;
+        --surface: #ffffff;
+        --page: #f8fafc;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.65;
+      }
+
+      .wrap {
+        width: min(820px, calc(100% - 32px));
+        margin: 40px auto 64px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+
+      header img {
+        width: 180px;
+        height: auto;
+      }
+
+      header .back {
+        margin-left: auto;
+        font-size: 14px;
+        color: var(--brand);
+        text-decoration: none;
+      }
+
+      header .back:hover {
+        text-decoration: underline;
+      }
+
+      article {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 40px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 32px;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      .dates {
+        margin: 0 0 28px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      h2 {
+        margin: 32px 0 10px;
+        font-size: 20px;
+        line-height: 1.3;
+      }
+
+      h3 {
+        margin: 22px 0 6px;
+        font-size: 16px;
+      }
+
+      p,
+      ul,
+      ol {
+        margin: 0 0 14px;
+      }
+
+      ul,
+      ol {
+        padding-left: 22px;
+      }
+
+      li {
+        margin-bottom: 6px;
+      }
+
+      a {
+        color: var(--brand);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8px 0 18px;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f1f5f9;
+        font-weight: 600;
+      }
+
+      .callout {
+        border-left: 3px solid var(--brand);
+        background: #f0f9ff;
+        padding: 12px 16px;
+        margin: 16px 0;
+        font-size: 15px;
+      }
+
+      footer {
+        margin-top: 24px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      @media (max-width: 640px) {
+        .wrap {
+          margin-top: 24px;
+        }
+
+        article {
+          padding: 24px;
+        }
+
+        h1 {
+          font-size: 26px;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a href="/" aria-label="Morrow home">
+          <img src="/brand/morrow-logo-light.svg" alt="Morrow" />
+        </a>
+        <a class="back" href="/">Back to Morrow</a>
+      </header>
+
+      <article>
+        <h1>Privacy Policy</h1>
+        <p class="dates">
+          Effective 11 November 2026 · Last updated 11 November 2026
+        </p>
+
+        <p>
+          Morrow (“Morrow”, “we”, “us”) is a personal productivity application at
+          <a href="https://mrrw.my.id">https://mrrw.my.id</a>. This policy explains
+          what information the service collects, why we collect it, how it is
+          stored and shared, and the choices available to you. It applies to the
+          Morrow web application, the Morrow API, and the integrations and
+          notifications described below.
+        </p>
+
+        <h2>1. Information we collect</h2>
+
+        <h3>Account information</h3>
+        <p>
+          When you register we collect your name, email address, and password.
+          Passwords are stored only as salted Argon2id hashes and are never
+          returned by the API. Your profile may also contain an optional role and
+          time zone. Session tokens are stored by your browser in local storage;
+          the server stores only a hash of each token.
+        </p>
+
+        <h3>Content you create</h3>
+        <p>
+          Morrow stores the workspace content you enter or import: tasks and their
+          descriptions, labels, time boxes, and external links; projects; areas;
+          notes and their rich text; inbox items; calendar events; habits and
+          habit check-ins; and related settings. This content is associated with
+          your account and is not public.
+        </p>
+
+        <h3>Attachments</h3>
+        <p>
+          If attachments are enabled and you upload a file to a project, task, or
+          note, the file is stored in an S3-compatible object store
+          (Cloudflare R2 when configured) and its metadata (name, size, content
+          type, and owner) is stored in our database. The API issues short-lived
+          signed URLs for upload and download; it does not proxy file bytes.
+        </p>
+
+        <h3>Google Calendar (optional)</h3>
+        <p>
+          If you connect Google Calendar, you authorize Morrow through Google
+          OAuth. We request
+          <code>https://www.googleapis.com/auth/calendar.events</code> and
+          <code>https://www.googleapis.com/auth/calendar.calendarlist.readonly</code>.
+          We use these scopes to list your calendars, read events from the
+          calendar you select, store copies of those events in Morrow, and create,
+          update, or delete events in that Google calendar when you create, edit,
+          or delete the corresponding event in Morrow. OAuth access and refresh
+          tokens are encrypted at rest with AES-GCM. You can disconnect the
+          integration at any time in Settings, which also removes the stored
+          tokens.
+        </p>
+
+        <h3>AI assistant (optional)</h3>
+        <p>
+          The assistant is off until you enable it and save a provider API key.
+          When enabled, Morrow sends a bounded JSON snapshot of your workspace to
+          DeepSeek to generate the reply. That snapshot includes tasks, projects,
+          notes (including note text), inbox items, events, habits, areas, and the
+          user request, together with identifiers needed to cite sources. Your
+          DeepSeek API key is stored encrypted and is never returned by the API.
+          If you do not enable the assistant, no workspace content is sent to
+          DeepSeek. Replies generated locally in the browser without the assistant
+          remain on your device.
+        </p>
+
+        <h3>Pepy task sync (optional, feature-gated)</h3>
+        <p>
+          Accounts explicitly allowed to use the SoftwareSeni Pepy integration can
+          push opted-in, time-boxed tasks and completion times to Pepy. The
+          integration sends the task fields needed for that sync (title, key,
+          description as configured, dates, times, status, and completion time)
+          to the Pepy API. It is disabled unless the account is enabled for it.
+        </p>
+
+        <h3>Push notifications</h3>
+        <p>
+          If you enable browser notifications, your browser creates a Web Push
+          subscription. We store the push endpoint, its public encryption keys
+          (p256dh and auth), the subscription time, and an optional user-agent
+          string so reminders can be delivered to your devices. Reminders are
+          derived from due tasks, upcoming events, and scheduled habits. You can
+          disable notifications in Settings or in your browser.
+        </p>
+
+        <h3>Technical and security data</h3>
+        <p>
+          Our servers log request metadata such as method, path, status code,
+          response size, duration, request ID, and the authenticated user ID when
+          applicable. Web server and CDN logs may also include IP address and
+          user-agent for security, abuse prevention, and debugging. We do not log
+          request bodies. Log files are rotated and kept for a limited period
+          (currently up to 14 days).
+        </p>
+
+        <h2>2. How we use information</h2>
+        <ul>
+          <li>Provide, operate, and secure the Morrow application and your account.</li>
+          <li>Store and display your workspace content across devices.</li>
+          <li>Run reminder scheduling and, if enabled, deliver Web Push notifications.</li>
+          <li>Sync calendars and tasks when you enable those integrations.</li>
+          <li>Generate assistant replies when you enable the assistant.</li>
+          <li>Diagnose failures, prevent abuse, and maintain service reliability.</li>
+          <li>Respond to support, privacy, and data-deletion requests.</li>
+        </ul>
+        <p>
+          We do not sell your personal information, we do not use it for
+          advertising, and we do not use third-party advertising or analytics
+          trackers in the application. We do not use your content to train our own
+          models.
+        </p>
+
+        <h2>3. Google user data</h2>
+        <p>
+          Morrow accesses Google user data only after you explicitly connect Google
+          Calendar, and only for the scopes and purposes described above. We use
+          Google user data solely to provide the calendar sync you request:
+          displaying your events in Morrow and mirroring your Morrow event
+          changes to the calendar you selected.
+        </p>
+        <ul>
+          <li>
+            We do not sell Google user data, use it for advertising, or use it to
+            determine creditworthiness or for lending purposes.
+          </li>
+          <li>
+            We do not allow humans to read Google user data unless you ask us to
+            for support, it is necessary for security or legal compliance, or the
+            data is aggregated and de-identified.
+          </li>
+          <li>
+            We do not transfer Google user data to third parties except as needed
+            to provide the feature, comply with law, or as part of a merger or
+            acquisition with notice.
+          </li>
+          <li>
+            If the AI assistant is enabled, event data in your workspace —
+            including events synced from Google Calendar — is included in the
+            context sent to DeepSeek as described in section 1. Disable the
+            assistant if you do not want this processing.
+          </li>
+        </ul>
+        <div class="callout">
+          Morrow’s use and transfer to any other app of information received from
+          Google APIs will adhere to the
+          <a
+            href="https://developers.google.com/terms/api-services-user-data-policy"
+            rel="noopener noreferrer"
+            >Google API Services User Data Policy</a
+          >, including the Limited Use requirements.
+        </div>
+        <p>
+          You can revoke Morrow’s access at any time from your
+          <a href="https://myaccount.google.com/permissions" rel="noopener noreferrer"
+            >Google Account permissions</a
+          >
+          page or by disconnecting Google Calendar in Morrow Settings. Revocation
+          stops future access; previously synced copies remain in your workspace
+          until you delete them or your account.
+        </p>
+
+        <h2>4. Sharing and service providers</h2>
+        <p>
+          We share information only with providers that help us run Morrow, and
+          only as needed for the feature you use. We do not sell personal
+          information.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Purpose</th>
+              <th>Data involved</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Google</td>
+              <td>Calendar OAuth and sync</td>
+              <td>Calendar list, events, OAuth tokens</td>
+            </tr>
+            <tr>
+              <td>DeepSeek</td>
+              <td>Assistant replies, only when enabled</td>
+              <td>Workspace snapshot and your prompt</td>
+            </tr>
+            <tr>
+              <td>SoftwareSeni Pepy</td>
+              <td>Optional task sync</td>
+              <td>Opted-in task fields and completion times</td>
+            </tr>
+            <tr>
+              <td>Cloudflare</td>
+              <td>DNS, CDN, security, and optional R2 attachments</td>
+              <td>Request metadata, IP address, attachment files</td>
+            </tr>
+            <tr>
+              <td>Web Push services</td>
+              <td>Delivering browser notifications</td>
+              <td>Push endpoint, encryption keys, notification payload</td>
+            </tr>
+            <tr>
+              <td>Hosting provider</td>
+              <td>Running the API and database</td>
+              <td>Account and workspace data</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          We may also disclose information when required by law, to protect the
+          service or its users, or in connection with a reorganization or transfer
+          of the service, subject to this policy.
+        </p>
+
+        <h2>5. Cookies and local storage</h2>
+        <p>
+          Morrow does not use advertising or analytics cookies. The web app stores
+          your session token and a read-only snapshot cache in browser local
+          storage, and a service worker caches application assets so the app can
+          load reliably. Cloudflare may set security cookies (for example, bot
+          management) as part of protecting the site. You can clear browser
+          storage at any time; doing so signs you out and removes cached data from
+          that device.
+        </p>
+
+        <h2>6. Retention</h2>
+        <p>
+          Account and workspace data are retained while your account is active.
+          When you delete content, it is removed from the active database; related
+          records are removed by database cascades. Account deletion removes your
+          profile, content, subscriptions, tokens, and integration credentials.
+          Security and access logs are kept for a limited period (currently up to
+          14 days). Encrypted backups, where used, may retain data for a short
+          additional period before rotation.
+        </p>
+
+        <h2>7. Security</h2>
+        <p>
+          Traffic is served over HTTPS. Passwords are hashed with Argon2id.
+          Session tokens are stored hashed server-side. Google OAuth tokens,
+          provider API keys, and other integration secrets are encrypted at rest
+          with AES-GCM. Access to the production database and secrets is limited
+          to the operator. No method of transmission or storage is completely
+          secure, so we cannot guarantee absolute security.
+        </p>
+
+        <h2>8. Your rights and choices</h2>
+        <ul>
+          <li>
+            <strong>Access and copy:</strong> request a copy of the account data
+            and workspace content associated with your account.
+          </li>
+          <li>
+            <strong>Correction:</strong> update your profile and content in the
+            app, or ask us to correct inaccurate account data.
+          </li>
+          <li>
+            <strong>Deletion:</strong> delete individual items in the app, or
+            request deletion of your account and associated data.
+          </li>
+          <li>
+            <strong>Withdraw consent:</strong> disconnect Google Calendar, disable
+            the assistant, disable push notifications, or stop using the Pepy
+            integration at any time.
+          </li>
+          <li>
+            <strong>Object or restrict:</strong> contact us if you believe
+            processing is unlawful or excessive.
+          </li>
+        </ul>
+        <p>
+          To exercise these rights, email
+          <a href="mailto:privacy@mrrw.my.id">privacy@mrrw.my.id</a>. We may need to
+          verify that the request comes from the account owner. We aim to respond
+          within 30 days. You may also have the right to complain to your local
+          data-protection authority.
+        </p>
+
+        <h2>9. Children</h2>
+        <p>
+          Morrow is a productivity tool for adults and is not directed to children
+          under 13. We do not knowingly collect personal information from children
+          under 13. If you believe a child has provided information, contact us and
+          we will delete it.
+        </p>
+
+        <h2>10. International transfers</h2>
+        <p>
+          Morrow and the providers listed above may process data in countries
+          other than yours, including the United States. Where required, transfers
+          rely on appropriate safeguards offered by those providers, such as
+          standard contractual clauses.
+        </p>
+
+        <h2>11. Changes to this policy</h2>
+        <p>
+          We may update this policy to reflect changes to the service or legal
+          requirements. The “Last updated” date at the top will change, and material
+          changes will be announced in the app. Continued use after an update means
+          you accept the revised policy.
+        </p>
+
+        <h2>12. Contact</h2>
+        <p>
+          Questions about this policy or your data:
+          <a href="mailto:privacy@mrrw.my.id">privacy@mrrw.my.id</a>.
+        </p>
+      </article>
+
+      <footer>
+        <p>© 2026 Morrow · <a href="/privacy.html">Privacy Policy</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

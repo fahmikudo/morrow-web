@@ -183,6 +183,12 @@ HeroUI ships pill buttons; `src/index.css` overrides `.button` to the field radi
 - Due dates are picked with HeroUI's `DatePicker` (React Aria segments + calendar popover) and converted at the form boundary to `YYYY-MM-DD` strings by `src/lib/calendar-date.ts`; there is no native `input[type=date]` anywhere.
 - Rich text is stored as HTML from the app's own editor. Read-only views render it through `RichTextContent`; search, excerpts and card summaries strip the tags first. Plain-text values (the seed descriptions) are treated as a single paragraph, and trailing empty paragraphs are trimmed on save.
 
+### Public pages
+
+- `/privacy.html` is a static, unauthenticated page in `public/`, served without the SPA shell or JavaScript. Google OAuth verification crawlers must see the policy directly, so keep it in sync whenever data practices or integrations change.
+- The sign-in screen links to it, and `index.html` carries a `<noscript>` fallback with the app name, purpose, and the same link for crawlers that do not execute JavaScript.
+- The policy is written against the current implementation: account and workspace data, Google Calendar (scopes, sync, token encryption, Limited Use), DeepSeek assistant context, Pepy sync, Web Push, Cloudflare/R2, local storage, log retention, and deletion requests.
+
 ### Testing
 
 Vitest covers the data layer (storage recovery, repository semantics), the HTTP client (bearer token, error mapping, offline mutations, 401 handling), snapshot hydration, mock settings transitions, contract fixtures, task filtering/sorting, project progress, tag parsing, the Today derivation, calendar month grids/due-date grouping, and rich-text helpers.

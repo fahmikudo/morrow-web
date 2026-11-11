@@ -205,6 +205,12 @@ export function LoginPage({ mode = 'login' }: { mode?: AuthMode }) {
                 </>
               )}
             </div>
+
+            <p className="mt-4 text-center text-xs text-muted">
+              <a href="/privacy.html" className="hover:underline">
+                Privacy Policy
+              </a>
+            </p>
           </div>
         </div>
       </main>
