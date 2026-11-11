@@ -38,6 +38,8 @@ export type Habit = {
   /** Minutes before the start time to remind; unset means at the start. */
   reminderLeadMinutes?: number;
   startDate: string;
+  /** Last day the habit counts, inclusive; unset means ongoing. */
+  endDate?: string;
   archivedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -200,6 +202,7 @@ export type NewHabit = {
   reminderEnabled?: boolean;
   reminderLeadMinutes?: number;
   startDate?: string;
+  endDate?: string;
 };
 export type NewArea = {
   name: string;

@@ -84,6 +84,7 @@ describe('wire contracts', () => {
     expect(habit.schedule).toEqual({ kind: 'fixed', weekdays: [1, 2, 3, 4] });
     expect(habit.reminderEnabled).toBe(true);
     expect(habit.reminderLeadMinutes).toBe(15);
+    expect(habit.endDate).toBe('2026-12-31');
     expect(checkIn.habitId).toBe(habit.id);
     expect(inboxItem.archivedAt).toBeTypeOf('string');
     expect(profile.id).toBe('me');

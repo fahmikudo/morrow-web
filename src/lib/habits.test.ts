@@ -163,10 +163,73 @@ describe('due and schedule', () => {
   });
 });
 
+describe('habit active range', () => {
+  const challenge = habit({
+    id: 'challenge',
+    cadence: 'daily',
+    target: 1,
+    startDate: '2026-11-01',
+    endDate: '2026-11-03',
+  });
+  const checkIns = [
+    checkIn('challenge', '2026-11-01'),
+    checkIn('challenge', '2026-11-02'),
+    checkIn('challenge', '2026-11-03'),
+    checkIn('challenge', '2026-11-04'),
+  ];
+
+  it('stops counting after the inclusive end date', () => {
+    const final = habitProgress(challenge, checkIns, '2026-11-20');
+    expect(final.period).toEqual({ start: '2026-11-03', end: '2026-11-03' });
+    expect(final.count).toBe(1);
+    expect(final.met).toBe(true);
+    expect(habitProgress(challenge, checkIns, '2026-11-02').count).toBe(1);
+  });
+
+  it('keeps the final streak after the habit ends', () => {
+    expect(habitStreak(challenge, checkIns, '2026-11-20')).toBe(3);
+  });
+
+  it('is not due before the start or after the end', () => {
+    expect(isHabitDueOn(challenge, [], '2026-10-31')).toBe(false);
+    expect(isHabitDueOn(challenge, [], '2026-11-02')).toBe(true);
+    expect(isHabitDueOn(challenge, [], '2026-11-04')).toBe(false);
+  });
+
+  it('clamps scheduled dates and dots to the active range', () => {
+    const weekdays = habit({
+      id: 'weekdays',
+      cadence: 'daily',
+      target: 1,
+      schedule: { kind: 'fixed', weekdays: [1, 3, 5] },
+      startDate: '2026-11-04',
+      endDate: '2026-11-06',
+    });
+
+    expect(habitScheduleDates(weekdays, '2026-11-02', '2026-11-08')).toEqual([
+      '2026-11-04',
+      '2026-11-06',
+    ]);
+
+    const dots = habitDots(
+      habit({ id: 'dots', cadence: 'weekly', startDate: '2026-11-04' }),
+      [],
+      '2026-11-08',
+    );
+    expect(dots.map((dot) => dot.date)).toEqual([
+      '2026-11-04',
+      '2026-11-05',
+      '2026-11-06',
+      '2026-11-07',
+      '2026-11-08',
+    ]);
+  });
+});
+
 describe('habitDots and labels', () => {
   it('renders a Monday-first week with check states', () => {
     const dots = habitDots(
-      { id: 'run', cadence: 'weekly' },
+      habit({ id: 'run', cadence: 'weekly' }),
       [checkIn('run', '2026-11-03')],
       '2026-11-08',
     );
@@ -178,8 +241,8 @@ describe('habitDots and labels', () => {
   });
 
   it('shows the last seven days for daily habits and no dots for monthly', () => {
-    expect(habitDots({ id: 'd', cadence: 'daily' }, [], '2026-11-08')).toHaveLength(7);
-    expect(habitDots({ id: 'm', cadence: 'monthly' }, [], '2026-11-08')).toEqual([]);
+    expect(habitDots(habit({ id: 'd', cadence: 'daily' }), [], '2026-11-08')).toHaveLength(7);
+    expect(habitDots(habit({ id: 'm', cadence: 'monthly' }), [], '2026-11-08')).toEqual([]);
   });
 
   it('labels occurrence times', () => {

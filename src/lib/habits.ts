@@ -28,6 +28,26 @@ export function periodRange(cadence: HabitCadence, dateOnly: string): PeriodRang
   return { start: toDateOnly(start), end: toDateOnly(end) };
 }
 
+type HabitRange = Pick<Habit, 'startDate'> & Pick<Partial<Habit>, 'endDate'>;
+
+/** A habit counts from its start date through its end date, both inclusive. */
+export function isHabitActiveOn(habit: HabitRange, dateOnly: string): boolean {
+  if (dateOnly < habit.startDate) return false;
+  return !habit.endDate || dateOnly <= habit.endDate;
+}
+
+/** True once the habit's inclusive end date is in the past. */
+export function isHabitEnded(habit: HabitRange, dateOnly: string): boolean {
+  return Boolean(habit.endDate && habit.endDate < dateOnly);
+}
+
+/** Clamps a reference date to the habit's active range so final stats are stable after it ends. */
+export function habitAnchorDate(habit: HabitRange, dateOnly: string): string {
+  if (dateOnly < habit.startDate) return habit.startDate;
+  if (habit.endDate && dateOnly > habit.endDate) return habit.endDate;
+  return dateOnly;
+}
+
 export type HabitProgress = {
   count: number;
   target: number;
@@ -38,15 +58,20 @@ export type HabitProgress = {
 };
 
 export function habitProgress(
-  habit: Pick<Habit, 'id' | 'cadence' | 'target'>,
+  habit: Pick<Habit, 'id' | 'cadence' | 'target' | 'startDate' | 'endDate'>,
   checkIns: HabitCheckIn[],
   dateOnly: string,
 ): HabitProgress {
-  const period = periodRange(habit.cadence, dateOnly);
-  const count = checkIns.filter(
-    (entry) =>
-      entry.habitId === habit.id && entry.date >= period.start && entry.date <= period.end,
-  ).length;
+  const period = periodRange(habit.cadence, habitAnchorDate(habit, dateOnly));
+  const from = period.start < habit.startDate ? habit.startDate : period.start;
+  const to = habit.endDate && period.end > habit.endDate ? habit.endDate : period.end;
+  const count =
+    from > to
+      ? 0
+      : checkIns.filter(
+          (entry) =>
+            entry.habitId === habit.id && entry.date >= from && entry.date <= to,
+        ).length;
   const target = Math.max(1, habit.target);
 
   return {
@@ -68,23 +93,30 @@ export function checkInOn(checkIns: HabitCheckIn[], habitId: string, date: strin
  * streak — it starts counting from the previous period instead.
  */
 export function habitStreak(
-  habit: Pick<Habit, 'id' | 'cadence' | 'target' | 'startDate'>,
+  habit: Pick<Habit, 'id' | 'cadence' | 'target' | 'startDate' | 'endDate'>,
   checkIns: HabitCheckIn[],
   dateOnly: string,
 ): number {
   const target = Math.max(1, habit.target);
-  const current = habitProgress(habit, checkIns, dateOnly);
-  let cursor = current.met ? dateOnly : shiftDate(current.period.start, -1);
+  const anchor = habitAnchorDate(habit, dateOnly);
+  const current = habitProgress(habit, checkIns, anchor);
+  let cursor = current.met ? anchor : shiftDate(current.period.start, -1);
   let streak = 0;
 
   for (let guard = 0; guard < 500; guard += 1) {
     const period = periodRange(habit.cadence, cursor);
     if (period.end < habit.startDate) break;
+    if (habit.endDate && period.start > habit.endDate) break;
 
-    const count = checkIns.filter(
-      (entry) =>
-        entry.habitId === habit.id && entry.date >= period.start && entry.date <= period.end,
-    ).length;
+    const from = period.start < habit.startDate ? habit.startDate : period.start;
+    const to = habit.endDate && period.end > habit.endDate ? habit.endDate : period.end;
+    const count =
+      from > to
+        ? 0
+        : checkIns.filter(
+            (entry) =>
+              entry.habitId === habit.id && entry.date >= from && entry.date <= to,
+          ).length;
     if (count < target) break;
 
     streak += 1;
@@ -104,10 +136,11 @@ export function isHabitScheduledOn(
 
 /** Due today: a scheduled, unchecked fixed habit, or an unmet, unchecked flexible one. */
 export function isHabitDueOn(
-  habit: Pick<Habit, 'id' | 'cadence' | 'target' | 'schedule'>,
+  habit: Pick<Habit, 'id' | 'cadence' | 'target' | 'schedule' | 'startDate' | 'endDate'>,
   checkIns: HabitCheckIn[],
   dateOnly: string,
 ): boolean {
+  if (!isHabitActiveOn(habit, dateOnly)) return false;
   if (checkInOn(checkIns, habit.id, dateOnly)) return false;
   if (habit.schedule.kind === 'fixed') return isHabitScheduledOn(habit, dateOnly);
 
@@ -116,15 +149,19 @@ export function isHabitDueOn(
 
 /** Dates a fixed habit expects a check-in; flexible habits have no scheduled days. */
 export function habitScheduleDates(
-  habit: Pick<Habit, 'schedule'>,
+  habit: Pick<Habit, 'schedule' | 'startDate' | 'endDate'>,
   fromDate: string,
   toDate: string,
 ): string[] {
   if (habit.schedule.kind === 'flexible') return [];
 
+  const from = fromDate < habit.startDate ? habit.startDate : fromDate;
+  const to = habit.endDate && toDate > habit.endDate ? habit.endDate : toDate;
+  if (from > to) return [];
+
   const dates: string[] = [];
-  let cursor = fromDate;
-  while (cursor <= toDate) {
+  let cursor = from;
+  while (cursor <= to) {
     if (isHabitScheduledOn(habit, cursor)) dates.push(cursor);
     cursor = shiftDate(cursor, 1);
   }
@@ -135,20 +172,23 @@ export type HabitDot = { date: string; checked: boolean; today: boolean };
 
 /** Weekly habits show Monday–Sunday; daily habits show the last seven days. */
 export function habitDots(
-  habit: Pick<Habit, 'id' | 'cadence'>,
+  habit: Pick<Habit, 'id' | 'cadence' | 'startDate' | 'endDate'>,
   checkIns: HabitCheckIn[],
   dateOnly: string,
 ): HabitDot[] {
   if (habit.cadence === 'monthly') return [];
 
+  const anchor = habitAnchorDate(habit, dateOnly);
   const period =
     habit.cadence === 'weekly'
-      ? periodRange('weekly', dateOnly)
-      : { start: shiftDate(dateOnly, -6), end: dateOnly };
+      ? periodRange('weekly', anchor)
+      : { start: shiftDate(anchor, -6), end: anchor };
+  const from = period.start < habit.startDate ? habit.startDate : period.start;
+  const to = habit.endDate && period.end > habit.endDate ? habit.endDate : period.end;
 
   const dots: HabitDot[] = [];
-  let cursor = period.start;
-  while (cursor <= period.end) {
+  let cursor = from;
+  while (cursor <= to) {
     dots.push({
       date: cursor,
       checked: checkInOn(checkIns, habit.id, cursor),

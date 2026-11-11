@@ -24,6 +24,7 @@ import {
   checkInOn,
   habitCadenceLabel,
   habitTimeLabel,
+  isHabitActiveOn,
   isHabitScheduledOn,
 } from '@/lib/habits';
 import { cn } from '@/lib/cn';
@@ -76,7 +77,8 @@ export function CalendarPage() {
     habits
       .filter(
         (habit) =>
-          isHabitScheduledOn(habit, date) || checkInOn(checkIns, habit.id, date),
+          isHabitActiveOn(habit, date) &&
+          (isHabitScheduledOn(habit, date) || checkInOn(checkIns, habit.id, date)),
       )
       .sort(
         (a, b) =>

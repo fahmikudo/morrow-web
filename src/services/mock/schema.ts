@@ -90,6 +90,7 @@ const habitSchema = z.object({
   reminderEnabled: z.boolean().optional(),
   reminderLeadMinutes: z.number().int().min(0).max(1440).optional(),
   startDate: z.string(),
+  endDate: z.string().optional(),
   archivedAt: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),

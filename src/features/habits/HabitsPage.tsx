@@ -11,7 +11,9 @@ import { SkeletonList } from '@/components/shared/SkeletonList';
 import { useAreas } from '@/features/areas/queries';
 import { useProjects } from '@/features/projects/queries';
 import { effectiveAreaId } from '@/lib/area';
+import { todayIso } from '@/lib/date';
 import { habitInsights } from '@/lib/insights';
+import { isHabitEnded } from '@/lib/habits';
 import type { Area, Habit } from '@/types';
 import { HabitFormDialog } from './HabitFormDialog';
 import { HabitRow } from './HabitRow';
@@ -27,7 +29,7 @@ import {
 const ALL_AREAS = 'all';
 const NO_AREA = 'none';
 
-type HabitTab = 'active' | 'archived';
+type HabitTab = 'active' | 'ended' | 'archived';
 
 export function HabitsPage() {
   const [tab, setTab] = useState<HabitTab>('active');
@@ -66,9 +68,14 @@ export function HabitsPage() {
   const areaById = new Map(areas.map((area) => [area.id, area]));
   const projectNames = new Map(projects.map((project) => [project.id, project.name]));
   const insights = habitInsights(habits, checkIns);
+  const today = todayIso();
+  const endedHabits = habits.filter((habit) => isHabitEnded(habit, today));
+  const activeHabits = habits.filter((habit) => !isHabitEnded(habit, today));
+  const tabHabits =
+    tab === 'active' ? activeHabits : tab === 'ended' ? endedHabits : archivedHabits;
 
   const visible =
-    (tab === 'active' ? habits : archivedHabits)
+    tabHabits
       .filter((habit) => {
         if (areaFilter === ALL_AREAS) return true;
         const areaId = effectiveAreaId(habit, projects);
@@ -143,6 +150,10 @@ export function HabitsPage() {
                 Active
                 <Tabs.Indicator />
               </Tabs.Tab>
+              <Tabs.Tab id="ended">
+                Ended
+                <Tabs.Indicator />
+              </Tabs.Tab>
               <Tabs.Tab id="archived">
                 Archived
                 <Tabs.Indicator />
@@ -207,14 +218,22 @@ export function HabitsPage() {
       {!isPending && !isError && visible.length === 0 && (habits.length > 0 || archivedHabits.length > 0) ? (
         <EmptyState
           icon={ListChecks}
-          title={tab === 'active' ? 'No habits match this filter' : 'No archived habits'}
+          title={
+            tab === 'active'
+              ? 'No habits match this filter'
+              : tab === 'ended'
+                ? 'No ended habits'
+                : 'No archived habits'
+          }
           description={
             tab === 'active'
               ? 'Try another area, or clear the filter to see every habit.'
-              : 'Archived habits keep their check-in history and can be restored.'
+              : tab === 'ended'
+                ? 'Habits move here after their optional end date while keeping their history.'
+                : 'Archived habits keep their check-in history and can be restored.'
           }
           action={
-            tab === 'active' ? (
+            tab !== 'archived' ? (
               <Button onPress={() => setAreaFilter(ALL_AREAS)}>Clear filter</Button>
             ) : undefined
           }

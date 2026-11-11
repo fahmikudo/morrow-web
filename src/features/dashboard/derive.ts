@@ -1,6 +1,12 @@
 import { daysFromNow, isOverdue, todayIso } from '@/lib/date';
 import { areaSummary, effectiveAreaId, type AreaSummary } from '@/lib/area';
-import { habitProgress, habitStreak, isHabitDueOn, type HabitProgress } from '@/lib/habits';
+import {
+  habitProgress,
+  habitStreak,
+  isHabitDueOn,
+  isHabitEnded,
+  type HabitProgress,
+} from '@/lib/habits';
 import { projectProgress, type ProjectProgress } from '@/features/projects/progress';
 import type {
   Area,
@@ -103,7 +109,11 @@ export function buildDashboard(input: DashboardInput, now: Date = new Date()): D
   const completionPercent =
     leaves.length > 0 ? Math.round((doneLeaves / leaves.length) * 100) : 0;
 
-  const habitOverviews: HabitOverview[] = habits
+  const activeHabits = habits.filter(
+    (habit) => !habit.archivedAt && !isHabitEnded(habit, today),
+  );
+
+  const habitOverviews: HabitOverview[] = activeHabits
     .map((habit) => ({
       habit,
       progress: habitProgress(habit, checkIns, today),
@@ -118,7 +128,9 @@ export function buildDashboard(input: DashboardInput, now: Date = new Date()): D
 
   const areas: AreaOverview[] = input.areas
     .map((area) => {
-      const areaHabits = habits.filter((habit) => effectiveAreaId(habit, projects) === area.id);
+      const areaHabits = activeHabits.filter(
+        (habit) => effectiveAreaId(habit, projects) === area.id,
+      );
       return {
         area,
         summary: areaSummary(area.id, projects, tasks, notes),

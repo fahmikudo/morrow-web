@@ -10,12 +10,18 @@ import {
   habitProgress,
   habitStreak,
   habitTimeLabel,
+  isHabitEnded,
 } from '@/lib/habits';
 import { cn } from '@/lib/cn';
 import type { Area, Habit, HabitCheckIn } from '@/types';
 import { useToggleHabitCheckIn } from './queries';
 
 const PERIOD_WORD = { daily: 'today', weekly: 'this week', monthly: 'this month' } as const;
+const FINAL_PERIOD_WORD = {
+  daily: 'on its final day',
+  weekly: 'in its final week',
+  monthly: 'in its final month',
+} as const;
 
 type HabitRowProps = {
   habit: Habit;
@@ -42,10 +48,12 @@ export function HabitRow({
 }: HabitRowProps) {
   const toggle = useToggleHabitCheckIn();
   const today = todayIso();
+  const ended = isHabitEnded(habit, today);
+  const reference = ended ? (habit.endDate ?? today) : today;
   const checkedToday = checkInOn(checkIns, habit.id, today);
-  const progress = habitProgress(habit, checkIns, today);
-  const streak = habitStreak(habit, checkIns, today);
-  const dots = habitDots(habit, checkIns, today);
+  const progress = habitProgress(habit, checkIns, reference);
+  const streak = habitStreak(habit, checkIns, reference);
+  const dots = habitDots(habit, checkIns, reference);
   const hasMenu = Boolean(onEdit || onArchive || onRestore || onDelete);
 
   return (
@@ -56,7 +64,7 @@ export function HabitRow({
         variant={checkedToday ? 'primary' : 'secondary'}
         aria-label={checkedToday ? `Undo check-in for ${habit.title}` : `Check in ${habit.title}`}
         aria-pressed={checkedToday}
-        isDisabled={isArchived || toggle.isPending}
+        isDisabled={isArchived || ended || toggle.isPending}
         onPress={() =>
           toggle.mutate({ habitId: habit.id, date: today, remove: checkedToday })
         }
@@ -77,6 +85,7 @@ export function HabitRow({
             {habit.title}
           </span>
           <AppTag>{habitCadenceLabel(habit)}</AppTag>
+          {ended ? <AppTag>Ended</AppTag> : null}
         </div>
 
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
@@ -87,7 +96,8 @@ export function HabitRow({
           ) : null}
           {habit.startTime ? <span>{habitTimeLabel(habit)}</span> : null}
           <span>
-            {progress.count}/{progress.target} {PERIOD_WORD[habit.cadence]}
+            {progress.count}/{progress.target}{' '}
+            {(ended ? FINAL_PERIOD_WORD : PERIOD_WORD)[habit.cadence]}
           </span>
           {streak > 0 ? (
             <span className="inline-flex items-center gap-1 text-warning">

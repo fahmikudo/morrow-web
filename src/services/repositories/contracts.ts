@@ -77,6 +77,7 @@ export type UpdateHabit = Partial<
   endTime?: string | null;
   reminderEnabled?: boolean | null;
   reminderLeadMinutes?: number | null;
+  endDate?: string | null;
 };
 
 export type UpdateEvent = Partial<Pick<Event, 'title' | 'date' | 'notes'>> & {

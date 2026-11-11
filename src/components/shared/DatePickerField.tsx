@@ -13,6 +13,8 @@ type DatePickerFieldProps = {
   /** Local `YYYY-MM-DD`, or `''` for no date. */
   value: string;
   onChange: (iso: string) => void;
+  /** Local `YYYY-MM-DD` lower bound, or `''` for none. */
+  minValue?: string;
   calendarLabel?: string;
   isInvalid?: boolean;
   error?: string;
@@ -23,6 +25,7 @@ export function DatePickerField({
   label,
   value,
   onChange,
+  minValue = '',
   calendarLabel = 'Choose a date',
   isInvalid = false,
   error,
@@ -33,6 +36,7 @@ export function DatePickerField({
       <DatePicker
         className="w-full"
         value={toCalendarDate(value)}
+        minValue={toCalendarDate(minValue) ?? undefined}
         onChange={(next) => onChange(fromCalendarDate(next))}
         isInvalid={isInvalid}
       >

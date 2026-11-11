@@ -41,6 +41,7 @@ export function createHabitRepository(): HabitRepository {
         target: input.target ?? 1,
         schedule: input.schedule ?? { kind: 'flexible' },
         startDate: input.startDate ?? todayIso(),
+        ...(input.endDate !== undefined ? { endDate: input.endDate } : {}),
         createdAt: timestamp,
         updatedAt: timestamp,
         ...(input.description !== undefined ? { description: input.description } : {}),
@@ -89,6 +90,10 @@ export function createHabitRepository(): HabitRepository {
         else next.reminderLeadMinutes = patch.reminderLeadMinutes;
       }
       if (patch.startDate !== undefined) next.startDate = patch.startDate;
+      if (patch.endDate !== undefined) {
+        if (patch.endDate === null) delete next.endDate;
+        else next.endDate = patch.endDate;
+      }
 
       if (patch.areaId !== undefined) {
         if (patch.areaId === null) delete next.areaId;

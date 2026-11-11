@@ -16,6 +16,7 @@ import {
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { useAreas } from '@/features/areas/queries';
+import { DatePickerField } from '@/components/shared/DatePickerField';
 import { TimePickerField } from '@/components/shared/TimePickerField';
 import { useProjects } from '@/features/projects/queries';
 import { useIsDesktop } from '@/hooks/use-media-query';
@@ -45,6 +46,8 @@ const habitSchema = z
     cadence: z.enum(['daily', 'weekly', 'monthly']),
     startTime: z.string().regex(/^\d{2}:\d{2}$/).or(z.literal('')),
     endTime: z.string().regex(/^\d{2}:\d{2}$/).or(z.literal('')),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')),
     remindMe: z.boolean(),
     reminderLead: z
       .string()
@@ -71,7 +74,11 @@ const habitSchema = z
   .refine(
     (values) => !values.startTime || !values.endTime || values.endTime > values.startTime,
     { message: 'End time must be after the start time', path: ['endTime'] },
-  );
+  )
+  .refine((values) => !values.endDate || values.endDate >= values.startDate, {
+    message: 'End date must be on or after the start date',
+    path: ['endDate'],
+  });
 
 type HabitValues = z.infer<typeof habitSchema>;
 
@@ -132,6 +139,8 @@ export function HabitFormDialog({
       weekdays: [],
       projectId: 'none',
       areaId: 'none',
+      startDate: todayIso(),
+      endDate: '',
       remindMe: true,
       reminderLead: 'inherit',
     },
@@ -142,6 +151,7 @@ export function HabitFormDialog({
   const watchWeekdays = useWatch({ control, name: 'weekdays' });
   const watchRemindMe = useWatch({ control, name: 'remindMe' });
   const watchStartTime = useWatch({ control, name: 'startTime' });
+  const watchStartDate = useWatch({ control, name: 'startDate' });
 
   const storedLead = habit?.reminderLeadMinutes || undefined;
   const reminderLeadOptions =
@@ -164,6 +174,8 @@ export function HabitFormDialog({
       weekdays: schedule?.kind === 'fixed' ? schedule.weekdays : [],
       startTime: habit?.startTime ?? '',
       endTime: habit?.endTime ?? '',
+      startDate: habit?.startDate ?? todayIso(),
+      endDate: habit?.endDate ?? '',
       remindMe: habit?.reminderEnabled !== false,
       reminderLead: habit?.reminderLeadMinutes
         ? String(habit.reminderLeadMinutes)
@@ -195,6 +207,7 @@ export function HabitFormDialog({
             schedule,
             startTime: values.startTime || null,
             endTime: values.endTime || null,
+            endDate: values.endDate || null,
             reminderEnabled: values.remindMe ? null : false,
             reminderLeadMinutes: reminderLead,
             projectId,
@@ -204,7 +217,8 @@ export function HabitFormDialog({
       } else {
         await createHabit.mutateAsync({
           title: values.title,
-          startDate: todayIso(),
+          startDate: values.startDate,
+          endDate: values.endDate || undefined,
           description: values.description?.trim() || undefined,
           cadence: values.cadence,
           target: Number(values.target),
@@ -338,6 +352,28 @@ export function HabitFormDialog({
                     />
                   )}
                 />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Controller
+                  control={control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <DatePickerField
+                      label="End date (optional)"
+                      value={field.value}
+                      onChange={field.onChange}
+                      minValue={watchStartDate}
+                      calendarLabel="Choose the habit end date"
+                      isInvalid={Boolean(formState.errors.endDate)}
+                      error={formState.errors.endDate?.message}
+                    />
+                  )}
+                />
+                <p className="self-end pb-2 text-xs text-muted">
+                  Counts from {watchStartDate} through this date. Leave empty to keep it
+                  ongoing.
+                </p>
               </div>
 
               <div className="flex flex-col gap-3 rounded-xl border border-border p-3">

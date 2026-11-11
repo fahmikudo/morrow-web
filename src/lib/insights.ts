@@ -187,7 +187,10 @@ export function habitInsights(
 ): HabitInsights {
   const today = todayIso(now);
   const week = periodRange('weekly', today);
-  const active = habits.filter((habit) => !habit.archivedAt && habit.startDate <= today);
+  const active = habits.filter(
+    (habit) =>
+      !habit.archivedAt && habit.startDate <= today && (!habit.endDate || habit.endDate >= today),
+  );
   const onTrack = active.filter((habit) => habitProgress(habit, checkIns, today).met).length;
   const bestStreak = active.reduce(
     (best, habit) => Math.max(best, habitStreak(habit, checkIns, today)),
@@ -297,7 +300,10 @@ export function personalInsights(
     (task) => task.dueDate && task.dueDate >= week.start && task.dueDate <= today,
   );
   const doneTasks = dueTasks.filter((task) => task.status === 'done').length;
-  const activeHabits = habits.filter((habit) => !habit.archivedAt && habit.startDate <= today);
+  const activeHabits = habits.filter(
+    (habit) =>
+      !habit.archivedAt && habit.startDate <= today && (!habit.endDate || habit.endDate >= today),
+  );
 
   let scheduled = 0;
   let checked = 0;
