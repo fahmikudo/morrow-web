@@ -1,0 +1,24 @@
+services:
+  web:
+    # Pinned by deploy.sh through MORROW_WEB_IMAGE_TAG. It must never float:
+    # a stack restart must not silently pick up a different build.
+    image: ghcr.io/fahmikudo/morrow-web:${MORROW_WEB_IMAGE_TAG:?set MORROW_WEB_IMAGE_TAG in .env}
+    container_name: morrow-web
+    restart: unless-stopped
+
+    # Loopback only. The host's nginx is the single way in.
+    ports:
+      - "127.0.0.1:${APP_PORT:-8082}:80"
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
