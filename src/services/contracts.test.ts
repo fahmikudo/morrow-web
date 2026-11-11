@@ -82,6 +82,8 @@ describe('wire contracts', () => {
     expect(event.startTime).toBe('09:00');
     expect(area.icon).toBe('briefcase');
     expect(habit.schedule).toEqual({ kind: 'fixed', weekdays: [1, 2, 3, 4] });
+    expect(habit.reminderEnabled).toBe(true);
+    expect(habit.reminderLeadMinutes).toBe(15);
     expect(checkIn.habitId).toBe(habit.id);
     expect(inboxItem.archivedAt).toBeTypeOf('string');
     expect(profile.id).toBe('me');

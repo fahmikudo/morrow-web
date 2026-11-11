@@ -33,6 +33,10 @@ export type Habit = {
   startTime?: string;
   /** Local `HH:mm` end; optional. */
   endTime?: string;
+  /** Unset follows the global reminder setting; false silences this habit. */
+  reminderEnabled?: boolean;
+  /** Minutes before the start time to remind; unset means at the start. */
+  reminderLeadMinutes?: number;
   startDate: string;
   archivedAt?: string;
   createdAt: string;
@@ -193,6 +197,8 @@ export type NewHabit = {
   schedule?: HabitSchedule;
   startTime?: string;
   endTime?: string;
+  reminderEnabled?: boolean;
+  reminderLeadMinutes?: number;
   startDate?: string;
 };
 export type NewArea = {

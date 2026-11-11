@@ -9,6 +9,7 @@ import {
   ListBox,
   Modal,
   Select,
+  Switch,
   TextArea,
   TextField,
 } from '@heroui/react';
@@ -44,6 +45,14 @@ const habitSchema = z
     cadence: z.enum(['daily', 'weekly', 'monthly']),
     startTime: z.string().regex(/^\d{2}:\d{2}$/).or(z.literal('')),
     endTime: z.string().regex(/^\d{2}:\d{2}$/).or(z.literal('')),
+    remindMe: z.boolean(),
+    reminderLead: z
+      .string()
+      .refine(
+        (value) =>
+          value === 'inherit' || (/^\d+$/.test(value) && Number(value) <= 1440),
+        'Pick a valid reminder time',
+      ),
     target: z
       .string()
       .trim()
@@ -65,6 +74,24 @@ const habitSchema = z
   );
 
 type HabitValues = z.infer<typeof habitSchema>;
+
+const PRESET_LEAD_IDS: Record<string, true> = {
+  inherit: true,
+  '5': true,
+  '10': true,
+  '15': true,
+  '30': true,
+  '60': true,
+};
+
+const REMINDER_LEAD_OPTIONS: Array<{ id: string; label: string }> = [
+  { id: 'inherit', label: 'At start' },
+  { id: '5', label: '5 minutes before' },
+  { id: '10', label: '10 minutes before' },
+  { id: '15', label: '15 minutes before' },
+  { id: '30', label: '30 minutes before' },
+  { id: '60', label: '60 minutes before' },
+];
 
 const CADENCE_OPTIONS: Array<{ id: HabitCadence; label: string }> = [
   { id: 'daily', label: 'Daily' },
@@ -105,12 +132,25 @@ export function HabitFormDialog({
       weekdays: [],
       projectId: 'none',
       areaId: 'none',
+      remindMe: true,
+      reminderLead: 'inherit',
     },
   });
 
   const watchProject = useWatch({ control, name: 'projectId' });
   const watchFixed = useWatch({ control, name: 'fixed' });
   const watchWeekdays = useWatch({ control, name: 'weekdays' });
+  const watchRemindMe = useWatch({ control, name: 'remindMe' });
+  const watchStartTime = useWatch({ control, name: 'startTime' });
+
+  const storedLead = habit?.reminderLeadMinutes || undefined;
+  const reminderLeadOptions =
+    storedLead != null && !Object.hasOwn(PRESET_LEAD_IDS, String(storedLead))
+      ? [
+          ...REMINDER_LEAD_OPTIONS,
+          { id: String(storedLead), label: `${storedLead} minutes before` },
+        ]
+      : REMINDER_LEAD_OPTIONS;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -124,6 +164,10 @@ export function HabitFormDialog({
       weekdays: schedule?.kind === 'fixed' ? schedule.weekdays : [],
       startTime: habit?.startTime ?? '',
       endTime: habit?.endTime ?? '',
+      remindMe: habit?.reminderEnabled !== false,
+      reminderLead: habit?.reminderLeadMinutes
+        ? String(habit.reminderLeadMinutes)
+        : 'inherit',
       projectId: habit?.projectId ?? defaultProjectId ?? 'none',
       areaId: habit?.areaId ?? defaultAreaId ?? 'none',
     });
@@ -136,6 +180,8 @@ export function HabitFormDialog({
     const schedule = values.fixed
       ? { kind: 'fixed' as const, weekdays: [...values.weekdays].sort((a, b) => a - b) }
       : { kind: 'flexible' as const };
+    const reminderLead =
+      values.reminderLead === 'inherit' ? null : Number(values.reminderLead);
 
     try {
       if (habit) {
@@ -149,6 +195,8 @@ export function HabitFormDialog({
             schedule,
             startTime: values.startTime || null,
             endTime: values.endTime || null,
+            reminderEnabled: values.remindMe ? null : false,
+            reminderLeadMinutes: reminderLead,
             projectId,
             areaId,
           },
@@ -163,6 +211,8 @@ export function HabitFormDialog({
           schedule,
           startTime: values.startTime || undefined,
           endTime: values.endTime || undefined,
+          reminderEnabled: values.remindMe ? undefined : false,
+          reminderLeadMinutes: reminderLead ?? undefined,
           projectId: projectId ?? undefined,
           areaId: areaId ?? undefined,
         });
@@ -288,6 +338,63 @@ export function HabitFormDialog({
                     />
                   )}
                 />
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-xl border border-border p-3">
+                <Controller
+                  control={control}
+                  name="remindMe"
+                  render={({ field }) => (
+                    <Switch isSelected={field.value} onChange={field.onChange}>
+                      <Switch.Content>
+                        <Switch.Control>
+                          <Switch.Thumb />
+                        </Switch.Control>
+                        Remind me
+                      </Switch.Content>
+                    </Switch>
+                  )}
+                />
+
+                {watchRemindMe ? (
+                  <Controller
+                    control={control}
+                    name="reminderLead"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onChange={(value) => field.onChange(value ?? 'inherit')}
+                        isDisabled={!watchStartTime}
+                      >
+                        <Label>Reminder time</Label>
+                        <Select.Trigger>
+                          <Select.Value />
+                          <Select.Indicator />
+                        </Select.Trigger>
+                        <Select.Popover>
+                          <ListBox>
+                            {reminderLeadOptions.map((option) => (
+                              <ListBox.Item
+                                key={option.id}
+                                id={option.id}
+                                textValue={option.label}
+                              >
+                                {option.label}
+                                <ListBox.ItemIndicator />
+                              </ListBox.Item>
+                            ))}
+                          </ListBox>
+                        </Select.Popover>
+                      </Select>
+                    )}
+                  />
+                ) : null}
+
+                <p className="text-xs text-muted">
+                  {watchStartTime
+                    ? 'Counts back from the start time. Defaults follow Settings → Notifications.'
+                    : 'Set a start time to receive this reminder.'}
+                </p>
               </div>
 
               <div className="flex flex-col gap-2">

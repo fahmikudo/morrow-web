@@ -87,6 +87,8 @@ const habitSchema = z.object({
   schedule: habitScheduleSchema,
   startTime: z.string().optional(),
   endTime: z.string().optional(),
+  reminderEnabled: z.boolean().optional(),
+  reminderLeadMinutes: z.number().int().min(0).max(1440).optional(),
   startDate: z.string(),
   archivedAt: z.string().optional(),
   createdAt: z.string(),

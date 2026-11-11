@@ -48,6 +48,12 @@ export function createHabitRepository(): HabitRepository {
         ...(input.projectId !== undefined ? { projectId: input.projectId } : {}),
         ...(input.startTime !== undefined ? { startTime: input.startTime } : {}),
         ...(input.endTime !== undefined ? { endTime: input.endTime } : {}),
+        ...(input.reminderEnabled !== undefined
+          ? { reminderEnabled: input.reminderEnabled }
+          : {}),
+        ...(input.reminderLeadMinutes !== undefined
+          ? { reminderLeadMinutes: input.reminderLeadMinutes }
+          : {}),
       };
 
       db.habits.push(habit);
@@ -73,6 +79,14 @@ export function createHabitRepository(): HabitRepository {
       if (patch.endTime !== undefined) {
         if (patch.endTime === null) delete next.endTime;
         else next.endTime = patch.endTime;
+      }
+      if (patch.reminderEnabled !== undefined) {
+        if (patch.reminderEnabled === null) delete next.reminderEnabled;
+        else next.reminderEnabled = patch.reminderEnabled;
+      }
+      if (patch.reminderLeadMinutes !== undefined) {
+        if (patch.reminderLeadMinutes === null) delete next.reminderLeadMinutes;
+        else next.reminderLeadMinutes = patch.reminderLeadMinutes;
       }
       if (patch.startDate !== undefined) next.startDate = patch.startDate;
 
