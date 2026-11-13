@@ -252,7 +252,7 @@ export function KnowledgePage() {
             >
               <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
                 <EntityIcon kind="note" className="size-4" />
-                <span className="truncate">{note.title}</span>
+                <span className="truncate">{note.title || 'Untitled'}</span>
               </h2>
               <p className="line-clamp-3 text-xs leading-relaxed text-muted">
                 {excerpt(note.content, 140) || 'Empty note'}

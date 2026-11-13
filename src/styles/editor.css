@@ -109,6 +109,15 @@
   outline-offset: -2px;
 }
 
+/* Document page: the page supplies the padding, not the editor frame. */
+.tiptap--plain {
+  padding: 0;
+}
+
+.tiptap--plain:focus-visible {
+  outline: none;
+}
+
 .rich-text .tableWrapper {
   margin: 0 0 0.75rem;
   overflow-x: auto;

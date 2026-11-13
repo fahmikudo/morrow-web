@@ -60,7 +60,7 @@ export async function searchAll(repos: Repositories, query: string): Promise<Sea
     .map((note) => ({
       kind: 'note',
       id: note.id,
-      title: note.title,
+      title: note.title.trim() || 'Untitled',
       subtitle: subtitleFrom(excerpt(note.content, 60), 'Note'),
       href: `/knowledge/${note.id}`,
     }));

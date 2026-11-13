@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type KeyboardEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, FieldError, Input, Label, ListBox, Modal, Select, TextField } from '@heroui/react';
 import { Controller, useForm } from 'react-hook-form';
@@ -65,6 +65,21 @@ export function ProjectFormDialog({
     });
   }, [isOpen, project, defaultAreaId, reset]);
 
+  /**
+   * The name input is the form's only native text input, so browsers treat
+   * Enter (and the mobile keyboard's Go/Next action) as an implicit submit.
+   * That created a half-filled project and closed the dialog mid-form. Advance
+   * to the description instead; the footer button is the explicit submit.
+   */
+  const handleFormKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+    if (!(event.target instanceof HTMLInputElement)) return;
+
+    event.preventDefault();
+    const editor = event.currentTarget.querySelector<HTMLElement>('[contenteditable="true"]');
+    editor?.focus();
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     const description = stripHtml(values.description ?? '').trim()
       ? cleanHtml(values.description ?? '')
@@ -91,7 +106,7 @@ export function ProjectFormDialog({
   });
 
   return (
-    <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
+    <Modal.Backdrop isOpen={isOpen} isDismissable={false} onOpenChange={onOpenChange}>
       <Modal.Container placement={isDesktop ? 'center' : 'bottom'} size="md">
         <Modal.Dialog className="sm:max-w-lg">
           <Modal.CloseTrigger />
@@ -104,7 +119,12 @@ export function ProjectFormDialog({
             ) : null}
           </Modal.Header>
           <Modal.Body>
-            <form id="project-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+            <form
+              id="project-form"
+              onSubmit={onSubmit}
+              onKeyDown={handleFormKeyDown}
+              className="flex flex-col gap-4"
+            >
               <Controller
                 control={control}
                 name="name"
@@ -115,7 +135,11 @@ export function ProjectFormDialog({
                     onChange={field.onChange}
                   >
                     <Label>Name</Label>
-                    <Input autoFocus placeholder="What is this project about?" />
+                    <Input
+                      autoFocus
+                      enterKeyHint="next"
+                      placeholder="What is this project about?"
+                    />
                     <FieldError>{formState.errors.name?.message}</FieldError>
                   </TextField>
                 )}
