@@ -5,6 +5,7 @@ import { Button, Input, Label, ListBox, Select, TextField, toast } from '@heroui
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { RelativeTime } from '@/components/shared/RelativeTime';
 import { RichTextEditor } from '@/components/shared/rich-text/RichTextEditor';
 import { cleanHtml, stripHtml } from '@/lib/text';
 import { markdownFileName, noteToMarkdown } from '@/lib/markdown';
@@ -37,6 +38,14 @@ const EMPTY_SNAPSHOT: Snapshot = {
 };
 
 const AUTOSAVE_MS = 900;
+
+/**
+ * React Router remounts the page when `/knowledge/new` becomes
+ * `/knowledge/:id` (AppShell keys the page wrapper by pathname). Remember the
+ * note whose editor should take focus back after that one remount so the
+ * first autosave does not interrupt typing.
+ */
+let resumeFocusNoteId: string | null = null;
 
 function snapshotFrom(note: Note): Snapshot {
   return {
@@ -73,6 +82,7 @@ export function NoteEditorPage() {
   const [html, setHtml] = useState('');
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
 
   const mountedRef = useRef(true);
   const deletingRef = useRef(false);
@@ -161,6 +171,7 @@ export function NoteEditorPage() {
           setSavedId(created.id);
           setLoadedNoteId(created.id);
           setSnapshot(snapshotFrom(created));
+          resumeFocusNoteId = created.id;
           navigate(`/knowledge/${created.id}`, { replace: true });
         }
         return;
@@ -277,7 +288,20 @@ export function NoteEditorPage() {
 
   const currentNoteId = savedId ?? noteId ?? null;
   const wordCount = stripHtml(html).split(/\s+/).filter(Boolean).length;
-  const status = isSaving ? 'Saving…' : dirty ? 'Unsaved changes' : currentNoteId ? 'Saved' : 'New page';
+  const status = isSaving
+    ? 'Saving…'
+    : dirty
+      ? 'Unsaved changes'
+      : currentNoteId
+        ? 'Saved'
+        : 'Draft';
+  const statusDot = isSaving
+    ? 'bg-accent'
+    : dirty
+      ? 'bg-warning'
+      : currentNoteId
+        ? 'bg-success'
+        : 'bg-muted';
 
   const handleExport = () => {
     const exportTitle = title.trim() || 'Untitled note';
@@ -298,133 +322,157 @@ export function NoteEditorPage() {
     toast.success('Markdown exported');
   };
 
+  const handleDone = async () => {
+    setIsFinishing(true);
+    try {
+      await enqueueSave(false);
+      navigate('/knowledge');
+    } finally {
+      if (mountedRef.current) setIsFinishing(false);
+    }
+  };
+
   return (
     <>
       <div
         className={cn(
-          isFocusMode ? 'motion-overlay fixed inset-0 z-50 overflow-y-auto bg-background' : '',
+          isFocusMode ? 'motion-overlay fixed inset-0 z-50 bg-background p-4' : '',
         )}
       >
         <div
           className={cn(
-            'mx-auto flex w-full max-w-3xl flex-col',
-            isFocusMode ? 'px-4 py-6 pb-16 sm:px-8 sm:py-10' : '',
+            'mx-auto w-full',
+            isFocusMode ? 'flex h-full max-w-6xl flex-col' : 'max-w-4xl',
           )}
         >
-          <header className="mb-6 flex flex-wrap items-center justify-between gap-2">
-            {isFocusMode ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted"
-                aria-label="Collapse to page"
-                onPress={() => setNoteFocusMode(false)}
-              >
-                <Minimize2 className="size-4" aria-hidden />
-                <span className="hidden sm:inline">Collapse</span>
-              </Button>
-            ) : (
-              <Link
-                to="/knowledge"
-                className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
-              >
-                <ArrowLeft className="size-4" aria-hidden />
-                Knowledge
-              </Link>
+          <div
+            className={cn(
+              'rounded-2xl border border-border bg-surface shadow-sm',
+              isFocusMode && 'flex min-h-0 flex-1 flex-col',
             )}
-
-            <div className="flex items-center gap-1.5">
-              <span
-                className={cn(
-                  'text-xs',
-                  isSaving ? 'text-accent' : dirty ? 'text-warning' : 'text-muted',
+          >
+            <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-t-2xl border-b border-border bg-surface-secondary/50 px-3 py-2 sm:px-4">
+              <div className="flex min-w-0 items-center gap-2">
+                {isFocusMode ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted"
+                    aria-label="Collapse to page"
+                    onPress={() => setNoteFocusMode(false)}
+                  >
+                    <Minimize2 className="size-4" aria-hidden />
+                    <span className="hidden sm:inline">Collapse</span>
+                  </Button>
+                ) : (
+                  <Link
+                    to="/knowledge"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-sm text-muted hover:bg-surface hover:text-foreground"
+                  >
+                    <ArrowLeft className="size-4" aria-hidden />
+                    Knowledge
+                  </Link>
                 )}
-                aria-live="polite"
-              >
-                {status}
-              </span>
-              {isFocusMode ? null : (
+                {isNew ? (
+                  <>
+                    <span className="text-muted" aria-hidden>
+                      /
+                    </span>
+                    <span className="truncate text-sm text-muted">New note</span>
+                  </>
+                ) : null}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] text-muted"
+                  aria-live="polite"
+                >
+                  <span className={cn('size-1.5 rounded-full', statusDot)} aria-hidden />
+                  {status}
+                </span>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  isPending={isFinishing}
+                  isDisabled={isFinishing}
+                  onPress={() => void handleDone()}
+                >
+                  Done
+                </Button>
+                {isFocusMode ? null : (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    aria-label="Expand to full screen"
+                    className="text-muted"
+                    onPress={() => setNoteFocusMode(true)}
+                  >
+                    <Maximize2 className="size-4" aria-hidden />
+                  </Button>
+                )}
                 <Button
                   isIconOnly
                   size="sm"
                   variant="ghost"
-                  aria-label="Expand to full screen"
+                  aria-label="Export as Markdown"
                   className="text-muted"
-                  onPress={() => setNoteFocusMode(true)}
+                  onPress={handleExport}
                 >
-                  <Maximize2 className="size-4" aria-hidden />
+                  <Download className="size-4" aria-hidden />
                 </Button>
+                {currentNoteId ? (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    aria-label="Delete note"
+                    onPress={() => setIsDeleteOpen(true)}
+                    className="text-muted"
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </Button>
+                ) : null}
+              </div>
+            </header>
+
+            <div
+              className={cn(
+                'flex flex-col gap-5 px-4 py-6 sm:px-8 sm:py-7',
+                isFocusMode && 'min-h-0 flex-1 overflow-y-auto',
               )}
-              <Button
-                isIconOnly
-                size="sm"
-                variant="ghost"
-                aria-label="Export as Markdown"
-                className="text-muted"
-                onPress={handleExport}
+            >
+              <TextField value={title} onChange={setTitle} className="w-full">
+                <Label className="sr-only">Page title</Label>
+                <Input
+                  autoFocus={isNew}
+                  placeholder="Untitled note"
+                  className="h-auto border-0 bg-transparent px-0 text-3xl font-semibold tracking-tight shadow-none sm:text-4xl"
+                />
+              </TextField>
+
+              <section
+                aria-label="Note details"
+                className="flex flex-col gap-3 rounded-xl border border-border bg-surface-secondary/40 p-3"
               >
-                <Download className="size-4" aria-hidden />
-              </Button>
-              {currentNoteId ? (
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="ghost"
-                  aria-label="Delete note"
-                  onPress={() => setIsDeleteOpen(true)}
-                  className="text-muted"
-                >
-                  <Trash2 className="size-4" aria-hidden />
-                </Button>
-              ) : null}
-            </div>
-          </header>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="section-label">Details</span>
+                  <span className="text-xs text-muted">
+                    {noteQuery.data ? (
+                      <RelativeTime iso={noteQuery.data.updatedAt} />
+                    ) : (
+                      'Tags, project, and area are optional'
+                    )}
+                  </span>
+                </div>
+                <TagInput tags={tags} onChange={setTags} />
 
-          <div className="flex flex-col gap-4">
-            <TextField value={title} onChange={setTitle} className="w-full">
-              <Label className="sr-only">Page title</Label>
-              <Input
-                autoFocus={isNew}
-                placeholder="Untitled"
-                className="h-auto border-0 bg-transparent px-0 text-3xl font-semibold tracking-tight shadow-none sm:text-4xl"
-              />
-            </TextField>
-
-            <div className="flex flex-col gap-2">
-              <TagInput tags={tags} onChange={setTags} />
-
-              <div className="flex flex-wrap gap-2">
-                <Select
-                  value={projectId}
-                  onChange={(value) => setProjectId((value as string) ?? 'none')}
-                  aria-label="Link note to a project"
-                  className="w-52"
-                >
-                  <Select.Trigger>
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Item id="none" textValue="No project">
-                        No project
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                      {(projects ?? []).map((project) => (
-                        <ListBox.Item key={project.id} id={project.id} textValue={project.name}>
-                          {project.name}
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-
-                {projectId === 'none' ? (
+                <div className="flex flex-wrap gap-2">
                   <Select
-                    value={areaId}
-                    onChange={(value) => setAreaId((value as string) ?? 'none')}
-                    aria-label="Link note to an area"
+                    value={projectId}
+                    onChange={(value) => setProjectId((value as string) ?? 'none')}
+                    aria-label="Link note to a project"
                     className="w-52"
                   >
                     <Select.Trigger>
@@ -433,48 +481,81 @@ export function NoteEditorPage() {
                     </Select.Trigger>
                     <Select.Popover>
                       <ListBox>
-                        <ListBox.Item id="none" textValue="No area">
-                          No area
+                        <ListBox.Item id="none" textValue="No project">
+                          No project
                           <ListBox.ItemIndicator />
                         </ListBox.Item>
-                        {(areas ?? []).map((area) => (
-                          <ListBox.Item key={area.id} id={area.id} textValue={area.name}>
-                            {area.name}
+                        {(projects ?? []).map((project) => (
+                          <ListBox.Item key={project.id} id={project.id} textValue={project.name}>
+                            {project.name}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
                         ))}
                       </ListBox>
                     </Select.Popover>
                   </Select>
-                ) : null}
-              </div>
+
+                  {projectId === 'none' ? (
+                    <Select
+                      value={areaId}
+                      onChange={(value) => setAreaId((value as string) ?? 'none')}
+                      aria-label="Link note to an area"
+                      className="w-52"
+                    >
+                      <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                      <Select.Popover>
+                        <ListBox>
+                          <ListBox.Item id="none" textValue="No area">
+                            No area
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                          {(areas ?? []).map((area) => (
+                            <ListBox.Item key={area.id} id={area.id} textValue={area.name}>
+                              {area.name}
+                              <ListBox.ItemIndicator />
+                            </ListBox.Item>
+                          ))}
+                        </ListBox>
+                      </Select.Popover>
+                    </Select>
+                  ) : null}
+                </div>
+              </section>
+
+              <RichTextEditor
+                value={html}
+                onChange={setHtml}
+                label="Page content"
+                variant="full"
+                plain
+                minHeight="lg"
+                stickyToolbar
+                stickyTopClass={isFocusMode ? 'top-0' : 'top-12'}
+                placeholder="Start writing. Use the toolbar above for headings, lists, and tables."
+                autoFocus={resumeFocusNoteId === noteId}
+                onAutoFocus={() => {
+                  resumeFocusNoteId = null;
+                }}
+              />
+
+              {currentNoteId ? (
+                <div className="border-t border-border pt-5">
+                  <AttachmentsPanel entityType="note" entityId={currentNoteId} />
+                </div>
+              ) : null}
             </div>
 
-            <RichTextEditor
-              key={loadedNoteId ?? 'new'}
-              value={html}
-              onChange={setHtml}
-              label="Page content"
-              variant="full"
-              toolbar="floating"
-              plain
-              minHeight="lg"
-            />
-
-            {currentNoteId ? (
-              <div className="border-t border-border pt-5">
-                <AttachmentsPanel entityType="note" entityId={currentNoteId} />
-              </div>
-            ) : null}
+            <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-b-2xl border-t border-border bg-surface-secondary/50 px-3 py-2 text-xs text-muted sm:px-4">
+              <span className="hidden truncate sm:block">
+                Toolbar formats selected text · # heading · - list · ⌘S saves now
+              </span>
+              <span className="truncate sm:hidden">⌘S saves · select text to format</span>
+              <span className="shrink-0">{wordCount} words</span>
+            </footer>
           </div>
-
-          <footer className="mt-10 flex items-center justify-between gap-3 border-t border-border pt-3 text-xs text-muted">
-            <span className="hidden truncate sm:block">
-              Select text for formatting · # heading · - list · ⌘S saves now
-            </span>
-            <span className="truncate sm:hidden">⌘S saves · select text to format</span>
-            <span className="shrink-0">{wordCount} words</span>
-          </footer>
         </div>
       </div>
 

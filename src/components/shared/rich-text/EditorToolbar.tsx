@@ -25,8 +25,6 @@ type EditorToolbarProps = {
   sticky?: boolean;
   /** Scroll offset for the sticky toolbar; defaults to below the top bar. */
   stickyTopClass?: string;
-  /** Drop the border/padding when the toolbar is hosted in a floating surface. */
-  bare?: boolean;
 };
 
 export function EditorToolbar({
@@ -34,7 +32,6 @@ export function EditorToolbar({
   variant = 'compact',
   sticky = false,
   stickyTopClass = 'top-14',
-  bare = false,
 }: EditorToolbarProps) {
   const state = useEditorState({
     editor,
@@ -62,11 +59,9 @@ export function EditorToolbar({
   return (
     <div
       className={
-        bare
-          ? 'flex items-center gap-1'
-          : sticky
-            ? `sticky ${stickyTopClass} z-10 flex items-center gap-1 overflow-x-auto border-b border-border bg-surface p-1.5`
-            : 'flex items-center gap-1 overflow-x-auto border-b border-border p-1.5'
+        sticky
+          ? `sticky ${stickyTopClass} z-10 flex items-center gap-1 overflow-x-auto border-b border-border bg-surface p-1.5`
+          : 'flex items-center gap-1 overflow-x-auto border-b border-border p-1.5'
       }
     >
       <ToolbarButton
