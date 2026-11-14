@@ -68,6 +68,14 @@ const snapshot: ServerSnapshot = {
       createdAt: '2026-11-08T00:00:00.000Z',
     },
   ],
+  habitSkips: [
+    {
+      id: 'hs_1',
+      habitId: 'h_1',
+      date: '2026-11-09',
+      createdAt: '2026-11-09T00:00:00.000Z',
+    },
+  ],
   profile: {
     id: 'me',
     name: 'Raka Pratama',
@@ -109,6 +117,7 @@ describe('snapshot hydration', () => {
       expect.objectContaining({ id: 'h_2' }),
     ]);
     expect(queryClient.getQueryData(['habits', 'check-ins'])).toEqual(snapshot.habitCheckIns);
+    expect(queryClient.getQueryData(['habits', 'skips'])).toEqual(snapshot.habitSkips);
     expect(queryClient.getQueryData(['tasks'])).toEqual(snapshot.tasks);
     expect(queryClient.getQueryData(['settings'])).toEqual({
       integrations: snapshot.integrations,

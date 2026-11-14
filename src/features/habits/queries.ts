@@ -10,6 +10,7 @@ export const habitKeys = {
   all: ['habits'] as const,
   archived: ['habits', 'archived'] as const,
   checkIns: ['habits', 'check-ins'] as const,
+  skips: ['habits', 'skips'] as const,
 };
 
 function useInvalidateHabits() {
@@ -18,6 +19,7 @@ function useInvalidateHabits() {
     void queryClient.invalidateQueries({ queryKey: habitKeys.all });
     void queryClient.invalidateQueries({ queryKey: habitKeys.archived });
     void queryClient.invalidateQueries({ queryKey: habitKeys.checkIns });
+    void queryClient.invalidateQueries({ queryKey: habitKeys.skips });
     void queryClient.invalidateQueries({ queryKey: searchKeys.all });
   };
 }
@@ -40,6 +42,13 @@ export function useHabitCheckIns() {
   return useQuery({
     queryKey: habitKeys.checkIns,
     queryFn: () => repositories.habits.listCheckIns(),
+  });
+}
+
+export function useHabitSkips() {
+  return useQuery({
+    queryKey: habitKeys.skips,
+    queryFn: () => repositories.habits.listSkips(),
   });
 }
 
@@ -131,6 +140,33 @@ export function useToggleHabitCheckIn() {
     onSuccess: (_result, variables) => {
       invalidate();
       toast.success(variables.remove ? 'Check-in removed' : 'Checked in');
+    },
+    onError: notifyError,
+  });
+}
+
+export function useToggleHabitSkip() {
+  const invalidate = useInvalidateHabits();
+
+  return useMutation({
+    mutationFn: async ({
+      habitId,
+      date,
+      remove,
+    }: {
+      habitId: string;
+      date: string;
+      remove: boolean;
+    }) => {
+      if (remove) {
+        await repositories.habits.removeSkip(habitId, date);
+        return;
+      }
+      await repositories.habits.skip(habitId, date);
+    },
+    onSuccess: (_result, variables) => {
+      invalidate();
+      toast.success(variables.remove ? 'Skip removed' : 'Skipped today');
     },
     onError: notifyError,
   });

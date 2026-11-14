@@ -21,7 +21,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useAreas } from '@/features/areas/queries';
 import { useEvents } from '@/features/calendar/queries';
 import { eventTimeLabel, eventsInRange } from '@/features/calendar/events';
-import { useHabitCheckIns, useHabits } from '@/features/habits/queries';
+import { useHabitCheckIns, useHabitSkips, useHabits } from '@/features/habits/queries';
 import { HabitRow } from '@/features/habits/HabitRow';
 import { useCreateInboxItem } from '@/features/inbox/queries';
 import { useNotes } from '@/features/knowledge/queries';
@@ -53,6 +53,7 @@ export function TodayPage() {
   const eventsQuery = useEvents();
   const habitsQuery = useHabits();
   const checkInsQuery = useHabitCheckIns();
+  const skipsQuery = useHabitSkips();
   const remindersQuery = useReminders();
   const { data: areas } = useAreas();
   const { data: profile } = useProfile();
@@ -65,14 +66,16 @@ export function TodayPage() {
     projectsQuery.isPending ||
     eventsQuery.isPending ||
     habitsQuery.isPending ||
-    checkInsQuery.isPending;
+    checkInsQuery.isPending ||
+    skipsQuery.isPending;
   const isError =
     tasksQuery.isError ||
     notesQuery.isError ||
     projectsQuery.isError ||
     eventsQuery.isError ||
     habitsQuery.isError ||
-    checkInsQuery.isError;
+    checkInsQuery.isError ||
+    skipsQuery.isError;
 
   if (isPending) {
     return (
@@ -95,6 +98,7 @@ export function TodayPage() {
             void eventsQuery.refetch();
             void habitsQuery.refetch();
             void checkInsQuery.refetch();
+            void skipsQuery.refetch();
           }}
         />
       </>
@@ -107,10 +111,11 @@ export function TodayPage() {
   const events = eventsQuery.data ?? [];
   const habits = habitsQuery.data ?? [];
   const checkIns = checkInsQuery.data ?? [];
+  const skips = skipsQuery.data ?? [];
   const reminders = isServerMode ? (remindersQuery.data ?? []) : [];
   const areaById = new Map((areas ?? []).map((area) => [area.id, area]));
   const dueHabits = habits
-    .filter((habit) => isHabitDueOn(habit, checkIns, todayIso(now)))
+    .filter((habit) => isHabitDueOn(habit, checkIns, todayIso(now), skips))
     .slice(0, 4);
   const weekEvents = eventsInRange(events, todayIso(now), daysFromNow(6, now));
   const projectNames = new Map(projects.map((project) => [project.id, project.name]));
@@ -190,6 +195,7 @@ export function TodayPage() {
                         key={habit.id}
                         habit={habit}
                         checkIns={checkIns}
+                        skips={skips}
                         area={areaId ? areaById.get(areaId) : undefined}
                         projectName={
                           habit.projectId ? projectNames.get(habit.projectId) : undefined

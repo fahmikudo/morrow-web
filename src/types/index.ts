@@ -53,6 +53,15 @@ export type HabitCheckIn = {
   createdAt: string;
 };
 
+/** An explicit "not today": silences the daily nudge without counting as a completion. */
+export type HabitSkip = {
+  id: string;
+  habitId: string;
+  /** Local `YYYY-MM-DD`; at most one skip per habit per day. */
+  date: string;
+  createdAt: string;
+};
+
 export type Area = {
   id: string;
   name: string;
@@ -162,6 +171,7 @@ export type Database = {
   areas: Area[];
   habits: Habit[];
   habitCheckIns: HabitCheckIn[];
+  habitSkips: HabitSkip[];
   profile: Profile;
   /** Next task number per project bucket (`projectId` or `none`). */
   counters: Record<string, number>;

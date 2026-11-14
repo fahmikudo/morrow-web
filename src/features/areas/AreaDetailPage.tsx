@@ -12,7 +12,7 @@ import { RichTextContent } from '@/components/shared/rich-text/RichTextContent';
 import { SkeletonList } from '@/components/shared/SkeletonList';
 import { HabitFormDialog } from '@/features/habits/HabitFormDialog';
 import { HabitRow } from '@/features/habits/HabitRow';
-import { useHabitCheckIns, useHabits } from '@/features/habits/queries';
+import { useHabitCheckIns, useHabitSkips, useHabits } from '@/features/habits/queries';
 import { useNotes } from '@/features/knowledge/queries';
 import { ProjectCard } from '@/features/projects/ProjectCard';
 import { ProjectFormDialog } from '@/features/projects/ProjectFormDialog';
@@ -37,6 +37,7 @@ export function AreaDetailPage() {
   const notesQuery = useNotes();
   const { data: habits } = useHabits();
   const { data: checkIns } = useHabitCheckIns();
+  const { data: skips } = useHabitSkips();
   const deleteArea = useDeleteArea();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -242,6 +243,7 @@ export function AreaDetailPage() {
                   key={habit.id}
                   habit={habit}
                   checkIns={checkIns ?? []}
+                  skips={skips ?? []}
                   area={area}
                   projectName={
                     habit.projectId ? projectNames.get(habit.projectId) : undefined

@@ -3,6 +3,7 @@ import type {
   Event,
   Habit,
   HabitCheckIn,
+  HabitSkip,
   InboxItem,
   NewArea,
   NewEvent,
@@ -150,6 +151,16 @@ export function createHabitRepository(baseUrl: string): HabitRepository {
       }),
     removeCheckIn: async (habitId: string, date: string) => {
       await request<void>(baseUrl, `/habits/${encode(habitId)}/check-ins/${encode(date)}`, {
+        method: 'DELETE',
+      });
+    },
+    listSkips: () => request<HabitSkip[]>(baseUrl, '/habit-skips'),
+    skip: (habitId: string, date: string) =>
+      request<HabitSkip>(baseUrl, `/habits/${encode(habitId)}/skips/${encode(date)}`, {
+        method: 'PUT',
+      }),
+    removeSkip: async (habitId: string, date: string) => {
+      await request<void>(baseUrl, `/habits/${encode(habitId)}/skips/${encode(date)}`, {
         method: 'DELETE',
       });
     },

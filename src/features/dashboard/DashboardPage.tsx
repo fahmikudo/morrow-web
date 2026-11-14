@@ -22,7 +22,7 @@ import { StatTile } from '@/components/shared/StatTile';
 import { AREA_TONE_PROGRESS } from '@/features/areas/tones';
 import { useAreas } from '@/features/areas/queries';
 import { useEvents } from '@/features/calendar/queries';
-import { useHabitCheckIns, useHabits } from '@/features/habits/queries';
+import { useHabitCheckIns, useHabitSkips, useHabits } from '@/features/habits/queries';
 import { useNotes } from '@/features/knowledge/queries';
 import { useInboxItems } from '@/features/inbox/queries';
 import { useProjects } from '@/features/projects/queries';
@@ -44,6 +44,7 @@ export function DashboardPage() {
   const eventsQuery = useEvents();
   const habitsQuery = useHabits();
   const checkInsQuery = useHabitCheckIns();
+  const skipsQuery = useHabitSkips();
   const inboxQuery = useInboxItems();
 
   const queries = [
@@ -54,6 +55,7 @@ export function DashboardPage() {
     eventsQuery,
     habitsQuery,
     checkInsQuery,
+    skipsQuery,
     inboxQuery,
   ];
   const isPending = queries.some((query) => query.isPending);
@@ -97,6 +99,7 @@ export function DashboardPage() {
     events: eventsQuery.data ?? [],
     habits: habitsQuery.data ?? [],
     checkIns: checkInsQuery.data ?? [],
+    skips: skipsQuery.data ?? [],
     inbox: inboxQuery.data ?? [],
   };
   const view = buildDashboard(input, now);

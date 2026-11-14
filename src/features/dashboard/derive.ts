@@ -13,6 +13,7 @@ import type {
   Event,
   Habit,
   HabitCheckIn,
+  HabitSkip,
   InboxItem,
   Note,
   Project,
@@ -86,6 +87,7 @@ export type DashboardInput = {
   events: Event[];
   habits: Habit[];
   checkIns: HabitCheckIn[];
+  skips: HabitSkip[];
   inbox: InboxItem[];
 };
 
@@ -223,5 +225,6 @@ export function buildDashboard(input: DashboardInput, now: Date = new Date()): D
 
 export function habitDueTodayCount(input: DashboardInput, now: Date = new Date()): number {
   const today = todayIso(now);
-  return input.habits.filter((habit) => isHabitDueOn(habit, input.checkIns, today)).length;
+  return input.habits.filter((habit) => isHabitDueOn(habit, input.checkIns, today, input.skips))
+    .length;
 }

@@ -1,4 +1,4 @@
-import { Check, Ellipsis, Flame } from 'lucide-react';
+import { Check, CircleSlash, Ellipsis, Flame } from 'lucide-react';
 import { Button, Dropdown, Label } from '@heroui/react';
 import { AppTag } from '@/components/shared/AppTag';
 import { EntityIcon } from '@/components/shared/EntityIcon';
@@ -10,11 +10,13 @@ import {
   habitProgress,
   habitStreak,
   habitTimeLabel,
+  isHabitDueOn,
   isHabitEnded,
+  skipOn,
 } from '@/lib/habits';
 import { cn } from '@/lib/cn';
-import type { Area, Habit, HabitCheckIn } from '@/types';
-import { useToggleHabitCheckIn } from './queries';
+import type { Area, Habit, HabitCheckIn, HabitSkip } from '@/types';
+import { useToggleHabitCheckIn, useToggleHabitSkip } from './queries';
 
 const PERIOD_WORD = { daily: 'today', weekly: 'this week', monthly: 'this month' } as const;
 const FINAL_PERIOD_WORD = {
@@ -26,6 +28,7 @@ const FINAL_PERIOD_WORD = {
 type HabitRowProps = {
   habit: Habit;
   checkIns: HabitCheckIn[];
+  skips: HabitSkip[];
   area?: Area;
   projectName?: string;
   onEdit?: (habit: Habit) => void;
@@ -38,6 +41,7 @@ type HabitRowProps = {
 export function HabitRow({
   habit,
   checkIns,
+  skips,
   area,
   projectName,
   onEdit,
@@ -47,13 +51,17 @@ export function HabitRow({
   isArchived = false,
 }: HabitRowProps) {
   const toggle = useToggleHabitCheckIn();
+  const skip = useToggleHabitSkip();
   const today = todayIso();
   const ended = isHabitEnded(habit, today);
   const reference = ended ? (habit.endDate ?? today) : today;
   const checkedToday = checkInOn(checkIns, habit.id, today);
+  const skippedToday = skipOn(skips, habit.id, today);
   const progress = habitProgress(habit, checkIns, reference);
   const streak = habitStreak(habit, checkIns, reference);
-  const dots = habitDots(habit, checkIns, reference);
+  const dots = habitDots(habit, checkIns, reference, skips);
+  const dueToday = isHabitDueOn(habit, checkIns, today);
+  const canSkip = !isArchived && !ended && (skippedToday || (dueToday && !checkedToday));
   const hasMenu = Boolean(onEdit || onArchive || onRestore || onDelete);
 
   return (
@@ -99,6 +107,7 @@ export function HabitRow({
             {progress.count}/{progress.target}{' '}
             {(ended ? FINAL_PERIOD_WORD : PERIOD_WORD)[habit.cadence]}
           </span>
+          {skippedToday ? <span className="text-warning">Skipped today</span> : null}
           {streak > 0 ? (
             <span className="inline-flex items-center gap-1 text-warning">
               <Flame className="size-3" aria-hidden />
@@ -110,11 +119,17 @@ export function HabitRow({
               {dots.map((dot) => (
                 <span
                   key={dot.date}
-                  title={dot.date}
+                  title={dot.skipped ? `${dot.date} · skipped` : dot.date}
                   className={cn(
                     'size-1.5 rounded-full',
-                    dot.checked ? 'bg-accent' : 'bg-border',
-                    dot.today && 'ring-1 ring-accent ring-offset-1 ring-offset-surface',
+                    dot.checked
+                      ? 'bg-accent'
+                      : dot.skipped
+                        ? 'bg-transparent ring-1 ring-warning'
+                        : 'bg-border',
+                    dot.today &&
+                      !dot.skipped &&
+                      'ring-1 ring-accent ring-offset-1 ring-offset-surface',
                   )}
                 />
               ))}
@@ -123,43 +138,73 @@ export function HabitRow({
         </div>
       </div>
 
-      {hasMenu ? (
-        <Dropdown>
-          <Button isIconOnly size="sm" variant="ghost" aria-label={`Actions for ${habit.title}`}>
-            <Ellipsis className="size-4" aria-hidden />
-          </Button>
-          <Dropdown.Popover placement="bottom end" className="min-w-44">
-            <Dropdown.Menu
-              onAction={(key) => {
-                if (key === 'edit') onEdit?.(habit);
-                if (key === 'archive') onArchive?.(habit);
-                if (key === 'restore') onRestore?.(habit);
-                if (key === 'delete') onDelete?.(habit);
-              }}
+      {canSkip || hasMenu ? (
+        <div className="flex items-center gap-0.5">
+          {canSkip ? (
+            <Button
+              isIconOnly
+              size="sm"
+              variant="ghost"
+              aria-label={
+                skippedToday
+                  ? `Undo skip for ${habit.title}`
+                  : `Skip ${habit.title} today`
+              }
+              aria-pressed={skippedToday}
+              isDisabled={checkedToday || skip.isPending}
+              onPress={() =>
+                skip.mutate({ habitId: habit.id, date: today, remove: skippedToday })
+              }
+              className={cn('text-muted', skippedToday && 'text-warning')}
             >
-              {onEdit ? (
-                <Dropdown.Item id="edit" textValue="Edit habit">
-                  <Label>Edit habit</Label>
-                </Dropdown.Item>
-              ) : null}
-              {onArchive ? (
-                <Dropdown.Item id="archive" textValue="Archive habit">
-                  <Label>Archive habit</Label>
-                </Dropdown.Item>
-              ) : null}
-              {onRestore ? (
-                <Dropdown.Item id="restore" textValue="Restore habit">
-                  <Label>Restore habit</Label>
-                </Dropdown.Item>
-              ) : null}
-              {onDelete ? (
-                <Dropdown.Item id="delete" textValue="Delete habit" variant="danger">
-                  <Label>Delete habit</Label>
-                </Dropdown.Item>
-              ) : null}
-            </Dropdown.Menu>
-          </Dropdown.Popover>
-        </Dropdown>
+              <CircleSlash className="size-4" aria-hidden />
+            </Button>
+          ) : null}
+
+          {hasMenu ? (
+            <Dropdown>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="ghost"
+                aria-label={`Actions for ${habit.title}`}
+              >
+                <Ellipsis className="size-4" aria-hidden />
+              </Button>
+              <Dropdown.Popover placement="bottom end" className="min-w-44">
+                <Dropdown.Menu
+                  onAction={(key) => {
+                    if (key === 'edit') onEdit?.(habit);
+                    if (key === 'archive') onArchive?.(habit);
+                    if (key === 'restore') onRestore?.(habit);
+                    if (key === 'delete') onDelete?.(habit);
+                  }}
+                >
+                  {onEdit ? (
+                    <Dropdown.Item id="edit" textValue="Edit habit">
+                      <Label>Edit habit</Label>
+                    </Dropdown.Item>
+                  ) : null}
+                  {onArchive ? (
+                    <Dropdown.Item id="archive" textValue="Archive habit">
+                      <Label>Archive habit</Label>
+                    </Dropdown.Item>
+                  ) : null}
+                  {onRestore ? (
+                    <Dropdown.Item id="restore" textValue="Restore habit">
+                      <Label>Restore habit</Label>
+                    </Dropdown.Item>
+                  ) : null}
+                  {onDelete ? (
+                    <Dropdown.Item id="delete" textValue="Delete habit" variant="danger">
+                      <Label>Delete habit</Label>
+                    </Dropdown.Item>
+                  ) : null}
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

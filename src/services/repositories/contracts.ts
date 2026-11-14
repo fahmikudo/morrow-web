@@ -3,6 +3,7 @@ import type {
   Event,
   Habit,
   HabitCheckIn,
+  HabitSkip,
   NewHabit,
   Profile,
   InboxItem,
@@ -144,6 +145,10 @@ export interface HabitRepository {
   /** Idempotent: one check-in per habit per day. */
   checkIn(habitId: string, date: string): Promise<HabitCheckIn>;
   removeCheckIn(habitId: string, date: string): Promise<void>;
+  listSkips(): Promise<HabitSkip[]>;
+  /** Idempotent: one skip per habit per day; clears that day's check-in. */
+  skip(habitId: string, date: string): Promise<HabitSkip>;
+  removeSkip(habitId: string, date: string): Promise<void>;
 }
 
 export interface ProfileRepository {

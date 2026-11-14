@@ -22,6 +22,7 @@ import {
   useArchivedHabits,
   useDeleteHabit,
   useHabitCheckIns,
+  useHabitSkips,
   useHabits,
   useRestoreHabit,
 } from './queries';
@@ -41,6 +42,7 @@ export function HabitsPage() {
   const habitsQuery = useHabits();
   const archivedQuery = useArchivedHabits();
   const checkInsQuery = useHabitCheckIns();
+  const skipsQuery = useHabitSkips();
   const projectsQuery = useProjects();
   const areasQuery = useAreas();
   const archiveHabit = useArchiveHabit();
@@ -51,18 +53,21 @@ export function HabitsPage() {
     habitsQuery.isPending ||
     archivedQuery.isPending ||
     checkInsQuery.isPending ||
+    skipsQuery.isPending ||
     projectsQuery.isPending ||
     areasQuery.isPending;
   const isError =
     habitsQuery.isError ||
     archivedQuery.isError ||
     checkInsQuery.isError ||
+    skipsQuery.isError ||
     projectsQuery.isError ||
     areasQuery.isError;
 
   const habits = habitsQuery.data ?? [];
   const archivedHabits = archivedQuery.data ?? [];
   const checkIns = checkInsQuery.data ?? [];
+  const skips = skipsQuery.data ?? [];
   const projects = projectsQuery.data ?? [];
   const areas = areasQuery.data ?? [];
   const areaById = new Map(areas.map((area) => [area.id, area]));
@@ -200,6 +205,7 @@ export function HabitsPage() {
             void habitsQuery.refetch();
             void archivedQuery.refetch();
             void checkInsQuery.refetch();
+            void skipsQuery.refetch();
             void projectsQuery.refetch();
             void areasQuery.refetch();
           }}
@@ -262,6 +268,7 @@ export function HabitsPage() {
                 key={habit.id}
                 habit={habit}
                 checkIns={checkIns}
+                skips={skips}
                 area={area}
                 projectName={
                   habit.projectId ? projectNames.get(habit.projectId) : undefined

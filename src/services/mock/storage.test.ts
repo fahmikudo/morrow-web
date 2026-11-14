@@ -51,6 +51,7 @@ describe('storage engine', () => {
     expect(db.areas).toHaveLength(4);
     expect(db.habits).toHaveLength(3);
     expect(db.habitCheckIns).toHaveLength(13);
+    expect(db.habitSkips).toEqual([]);
     expect(db.tasks).toHaveLength(20);
     expect(db.notes).toHaveLength(7);
     expect(db.inbox).toHaveLength(6);
@@ -194,6 +195,7 @@ describe('storage engine', () => {
       areas: [],
       habits: [],
       habitCheckIns: [],
+      habitSkips: [],
       profile: {
         id: 'me',
         name: 'Empty',

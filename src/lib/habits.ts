@@ -1,5 +1,5 @@
 import { parseDateOnly, toDateOnly } from '@/lib/date';
-import type { Habit, HabitCadence, HabitCheckIn } from '@/types';
+import type { Habit, HabitCadence, HabitCheckIn, HabitSkip } from '@/types';
 
 /** Weeks start on Monday; the calendar grid is Sunday-first for display only. */
 export const WEEK_START_DAY = 1;
@@ -88,6 +88,10 @@ export function checkInOn(checkIns: HabitCheckIn[], habitId: string, date: strin
   return checkIns.some((entry) => entry.habitId === habitId && entry.date === date);
 }
 
+export function skipOn(skips: HabitSkip[], habitId: string, date: string): boolean {
+  return skips.some((entry) => entry.habitId === habitId && entry.date === date);
+}
+
 /**
  * Consecutive completed periods. An unfinished current period does not break the
  * streak — it starts counting from the previous period instead.
@@ -134,14 +138,16 @@ export function isHabitScheduledOn(
   return habit.schedule.weekdays.includes(parseDateOnly(dateOnly).getDay());
 }
 
-/** Due today: a scheduled, unchecked fixed habit, or an unmet, unchecked flexible one. */
+/** Due today: a scheduled, unchecked, unskipped fixed habit, or an unmet flexible one. */
 export function isHabitDueOn(
   habit: Pick<Habit, 'id' | 'cadence' | 'target' | 'schedule' | 'startDate' | 'endDate'>,
   checkIns: HabitCheckIn[],
   dateOnly: string,
+  skips: HabitSkip[] = [],
 ): boolean {
   if (!isHabitActiveOn(habit, dateOnly)) return false;
   if (checkInOn(checkIns, habit.id, dateOnly)) return false;
+  if (skipOn(skips, habit.id, dateOnly)) return false;
   if (habit.schedule.kind === 'fixed') return isHabitScheduledOn(habit, dateOnly);
 
   return !habitProgress(habit, checkIns, dateOnly).met;
@@ -168,13 +174,14 @@ export function habitScheduleDates(
   return dates;
 }
 
-export type HabitDot = { date: string; checked: boolean; today: boolean };
+export type HabitDot = { date: string; checked: boolean; skipped: boolean; today: boolean };
 
 /** Weekly habits show Monday–Sunday; daily habits show the last seven days. */
 export function habitDots(
   habit: Pick<Habit, 'id' | 'cadence' | 'startDate' | 'endDate'>,
   checkIns: HabitCheckIn[],
   dateOnly: string,
+  skips: HabitSkip[] = [],
 ): HabitDot[] {
   if (habit.cadence === 'monthly') return [];
 
@@ -192,6 +199,7 @@ export function habitDots(
     dots.push({
       date: cursor,
       checked: checkInOn(checkIns, habit.id, cursor),
+      skipped: skipOn(skips, habit.id, cursor),
       today: cursor === dateOnly,
     });
     cursor = shiftDate(cursor, 1);

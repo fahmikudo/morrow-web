@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Area, Event, Habit, HabitCheckIn, InboxItem, Note, Project, Task } from '@/types';
+import type { Area, Event, Habit, HabitCheckIn, HabitSkip, InboxItem, Note, Project, Task } from '@/types';
 import { buildDashboard, habitDueTodayCount, type DashboardInput } from './derive';
 
 const now = new Date(2026, 10, 8, 9, 0, 0); // Sunday Nov 8 2026
@@ -50,6 +50,13 @@ const habit = (id: string, overrides: Partial<Habit> = {}): Habit => ({
 });
 
 const checkIn = (habitId: string, date: string): HabitCheckIn => ({
+  id: `${habitId}-${date}`,
+  habitId,
+  date,
+  createdAt: iso,
+});
+
+const skip = (habitId: string, date: string): HabitSkip => ({
   id: `${habitId}-${date}`,
   habitId,
   date,
@@ -114,6 +121,7 @@ const input = (overrides: Partial<DashboardInput> = {}): DashboardInput => ({
     checkIn('h-unmet', '2026-11-03'),
     checkIn('h-unmet', '2026-11-05'),
   ],
+  skips: [skip('h-due', '2026-11-08')],
   inbox: [inbox('i-old', '2026-11-01T00:00:00.000Z'), inbox('i-new', '2026-11-07T00:00:00.000Z')],
   ...overrides,
 });
@@ -196,12 +204,27 @@ describe('buildDashboard', () => {
   });
 
   it('counts habits due today', () => {
-    expect(habitDueTodayCount(input(), now)).toBe(2); // h-met checked today; h-unmet and h-due are unmet
+    expect(habitDueTodayCount(input(), now)).toBe(1); // h-met checked, h-due skipped, h-unmet still due
+  });
+
+  it('stops counting a habit due once today is skipped', () => {
+    expect(habitDueTodayCount(input({ skips: [] }), now)).toBe(2);
+    expect(habitDueTodayCount(input({ skips: [skip('h-unmet', '2026-11-08')] }), now)).toBe(1);
   });
 
   it('handles an empty dataset', () => {
     const view = buildDashboard(
-      { areas: [], tasks: [], projects: [], notes: [], events: [], habits: [], checkIns: [], inbox: [] },
+      {
+        areas: [],
+        tasks: [],
+        projects: [],
+        notes: [],
+        events: [],
+        habits: [],
+        checkIns: [],
+        skips: [],
+        inbox: [],
+      },
       now,
     );
 

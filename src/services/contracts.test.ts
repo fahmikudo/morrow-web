@@ -3,6 +3,7 @@ import areaFixture from '../../contracts/fixtures/area.json';
 import eventFixture from '../../contracts/fixtures/event.json';
 import habitCheckInFixture from '../../contracts/fixtures/habit-check-in.json';
 import habitFixture from '../../contracts/fixtures/habit.json';
+import habitSkipFixture from '../../contracts/fixtures/habit-skip.json';
 import inboxItemFixture from '../../contracts/fixtures/inbox-item.json';
 import noteFixture from '../../contracts/fixtures/note.json';
 import profileFixture from '../../contracts/fixtures/profile.json';
@@ -40,6 +41,7 @@ function parseEntities() {
     areas: [areaFixture],
     habits: [habitFixture],
     habitCheckIns: [habitCheckInFixture],
+    habitSkips: [habitSkipFixture],
     profile: profileFixture,
     counters: { p1: 12, none: 3 },
   });
@@ -53,6 +55,7 @@ function parseEntities() {
     area: envelope.areas[0],
     habit: envelope.habits[0],
     checkIn: envelope.habitCheckIns[0],
+    skip: envelope.habitSkips[0],
     inboxItem: envelope.inbox[0],
     profile: envelope.profile,
   };
@@ -69,7 +72,7 @@ function parseSearchResults(): SearchResult[] {
 
 describe('wire contracts', () => {
   it('validates every entity fixture against the shared schema', () => {
-    const { task, minimalTask, project, note, event, area, habit, checkIn, inboxItem, profile } =
+    const { task, minimalTask, project, note, event, area, habit, checkIn, skip, inboxItem, profile } =
       parseEntities();
 
     expect(task.key).toBe('DWP-12');
@@ -86,6 +89,8 @@ describe('wire contracts', () => {
     expect(habit.reminderLeadMinutes).toBe(15);
     expect(habit.endDate).toBe('2026-12-31');
     expect(checkIn.habitId).toBe(habit.id);
+    expect(skip.habitId).toBe(habit.id);
+    expect(skip.date).toBe('2026-11-09');
     expect(inboxItem.archivedAt).toBeTypeOf('string');
     expect(profile.id).toBe('me');
   });
@@ -117,6 +122,7 @@ describe('wire contracts', () => {
       areas,
       habits,
       habitCheckIns,
+      habitSkips,
       profile,
       counters,
     } = snapshot;
@@ -131,6 +137,7 @@ describe('wire contracts', () => {
       areas,
       habits,
       habitCheckIns,
+      habitSkips,
       profile,
       counters,
     });

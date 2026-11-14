@@ -122,5 +122,6 @@ describe('migrateV1ToV2', () => {
     expect(v6.profile.id).toBe('me');
     expect(v6.profile.name).toBe('Raka Pratama');
     expect(v6.habits).toEqual([]);
+    expect(v6.habitSkips).toEqual([]);
   });
 });

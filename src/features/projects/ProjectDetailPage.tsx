@@ -15,7 +15,7 @@ import { AttachmentsPanel } from '@/features/attachments/AttachmentsPanel';
 import { ProjectStatusTag } from '@/components/shared/tags';
 import { HabitFormDialog } from '@/features/habits/HabitFormDialog';
 import { HabitRow } from '@/features/habits/HabitRow';
-import { useHabitCheckIns, useHabits } from '@/features/habits/queries';
+import { useHabitCheckIns, useHabitSkips, useHabits } from '@/features/habits/queries';
 import { useNotes } from '@/features/knowledge/queries';
 import { useTasks } from '@/features/tasks/queries';
 import { TaskRow } from '@/features/tasks/TaskRow';
@@ -35,6 +35,7 @@ export function ProjectDetailPage() {
   const { data: notes } = useNotes();
   const { data: habits } = useHabits();
   const { data: checkIns } = useHabitCheckIns();
+  const { data: skips } = useHabitSkips();
   const archiveProject = useArchiveProject();
   const reactivateProject = useReactivateProject();
 
@@ -193,6 +194,7 @@ export function ProjectDetailPage() {
                   key={habit.id}
                   habit={habit}
                   checkIns={checkIns ?? []}
+                  skips={skips ?? []}
                   projectName={project.name}
                 />
               ))}

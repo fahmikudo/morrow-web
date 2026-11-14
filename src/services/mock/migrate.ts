@@ -58,5 +58,5 @@ export function migrateV4ToV5(db: DatabaseV4): DatabaseV5 {
 
 /** Adds the single local profile introduced in v6. */
 export function migrateV5ToV6(db: DatabaseV5): Database {
-  return { ...db, version: 6, profile: createDefaultProfile() };
+  return { ...db, version: 6, habitSkips: [], profile: createDefaultProfile() };
 }

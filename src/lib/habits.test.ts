@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Habit, HabitCheckIn } from '@/types';
+import type { Habit, HabitCheckIn, HabitSkip } from '@/types';
 import {
   checkInOn,
   habitCadenceLabel,
@@ -12,6 +12,7 @@ import {
   isHabitScheduledOn,
   periodRange,
   shiftDate,
+  skipOn,
 } from './habits';
 
 const habit = (overrides: Partial<Habit> & { id: string }): Habit => ({
@@ -27,6 +28,13 @@ const habit = (overrides: Partial<Habit> & { id: string }): Habit => ({
 
 const checkIn = (habitId: string, date: string): HabitCheckIn => ({
   id: `${habitId}-${date}`,
+  habitId,
+  date,
+  createdAt: '2026-10-01T00:00:00.000Z',
+});
+
+const skip = (habitId: string, date: string): HabitSkip => ({
+  id: `${habitId}-skip-${date}`,
   habitId,
   date,
   createdAt: '2026-10-01T00:00:00.000Z',
@@ -161,6 +169,20 @@ describe('due and schedule', () => {
     ]);
     expect(habitScheduleDates(flexible, '2026-11-02', '2026-11-08')).toEqual([]);
   });
+
+  it('clears both fixed and flexible due state for a skipped day', () => {
+    expect(skipOn([skip('fixed', '2026-11-02')], 'fixed', '2026-11-02')).toBe(true);
+    expect(isHabitDueOn(fixed, [], '2026-11-02', [skip('fixed', '2026-11-02')])).toBe(false);
+    expect(isHabitDueOn(flexible, [], '2026-11-02', [skip('flexible', '2026-11-02')])).toBe(false);
+    // A skip is day-scoped: the next day is due again.
+    expect(isHabitDueOn(fixed, [], '2026-11-04', [skip('fixed', '2026-11-02')])).toBe(true);
+    // Skips never mask a completion.
+    expect(
+      isHabitDueOn(fixed, [checkIn('fixed', '2026-11-02')], '2026-11-02', [
+        skip('fixed', '2026-11-02'),
+      ]),
+    ).toBe(false);
+  });
 });
 
 describe('habit active range', () => {
@@ -232,11 +254,13 @@ describe('habitDots and labels', () => {
       habit({ id: 'run', cadence: 'weekly' }),
       [checkIn('run', '2026-11-03')],
       '2026-11-08',
+      [skip('run', '2026-11-04')],
     );
 
     expect(dots).toHaveLength(7);
     expect(dots[0].date).toBe('2026-11-02');
-    expect(dots[1]).toMatchObject({ date: '2026-11-03', checked: true });
+    expect(dots[1]).toMatchObject({ date: '2026-11-03', checked: true, skipped: false });
+    expect(dots[2]).toMatchObject({ date: '2026-11-04', checked: false, skipped: true });
     expect(dots[6].today).toBe(true);
   });
 

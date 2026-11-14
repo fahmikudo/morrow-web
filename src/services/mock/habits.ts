@@ -1,6 +1,6 @@
 import { createId } from '@/lib/id';
 import type { HabitRepository, UpdateHabit } from '@/services/repositories/contracts';
-import type { Habit, HabitCheckIn, NewHabit } from '@/types';
+import type { Habit, HabitCheckIn, HabitSkip, NewHabit } from '@/types';
 import { todayIso } from '@/lib/date';
 import { latency } from './latency';
 import { loadDatabase, saveDatabase } from './storage';
@@ -144,6 +144,7 @@ export function createHabitRepository(): HabitRepository {
       const index = indexOf(db.habits, id);
       db.habits.splice(index, 1);
       db.habitCheckIns = db.habitCheckIns.filter((entry) => entry.habitId !== id);
+      db.habitSkips = db.habitSkips.filter((entry) => entry.habitId !== id);
       saveDatabase(db);
     },
 
@@ -162,7 +163,13 @@ export function createHabitRepository(): HabitRepository {
       const existing = db.habitCheckIns.find(
         (entry) => entry.habitId === habitId && entry.date === date,
       );
-      if (existing) return existing;
+      if (existing) {
+        db.habitSkips = db.habitSkips.filter(
+          (entry) => !(entry.habitId === habitId && entry.date === date),
+        );
+        saveDatabase(db);
+        return existing;
+      }
 
       const checkIn: HabitCheckIn = {
         id: createId('hc'),
@@ -171,6 +178,9 @@ export function createHabitRepository(): HabitRepository {
         createdAt: new Date().toISOString(),
       };
       db.habitCheckIns.push(checkIn);
+      db.habitSkips = db.habitSkips.filter(
+        (entry) => !(entry.habitId === habitId && entry.date === date),
+      );
       saveDatabase(db);
       return checkIn;
     },
@@ -181,6 +191,54 @@ export function createHabitRepository(): HabitRepository {
       if (!db.habits.some((habit) => habit.id === habitId)) throw new Error('Habit not found');
 
       db.habitCheckIns = db.habitCheckIns.filter(
+        (entry) => !(entry.habitId === habitId && entry.date === date),
+      );
+      saveDatabase(db);
+    },
+
+    async listSkips() {
+      await latency();
+      return loadDatabase().habitSkips;
+    },
+
+    async skip(habitId: string, date: string) {
+      await latency();
+      if (!DATE_ONLY.test(date)) throw new Error('Use a YYYY-MM-DD date for skips');
+
+      const db = loadDatabase();
+      if (!db.habits.some((habit) => habit.id === habitId)) throw new Error('Habit not found');
+
+      const existing = db.habitSkips.find(
+        (entry) => entry.habitId === habitId && entry.date === date,
+      );
+      if (existing) {
+        db.habitCheckIns = db.habitCheckIns.filter(
+          (entry) => !(entry.habitId === habitId && entry.date === date),
+        );
+        saveDatabase(db);
+        return existing;
+      }
+
+      const skip: HabitSkip = {
+        id: createId('hs'),
+        habitId,
+        date,
+        createdAt: new Date().toISOString(),
+      };
+      db.habitSkips.push(skip);
+      db.habitCheckIns = db.habitCheckIns.filter(
+        (entry) => !(entry.habitId === habitId && entry.date === date),
+      );
+      saveDatabase(db);
+      return skip;
+    },
+
+    async removeSkip(habitId: string, date: string) {
+      await latency();
+      const db = loadDatabase();
+      if (!db.habits.some((habit) => habit.id === habitId)) throw new Error('Habit not found');
+
+      db.habitSkips = db.habitSkips.filter(
         (entry) => !(entry.habitId === habitId && entry.date === date),
       );
       saveDatabase(db);

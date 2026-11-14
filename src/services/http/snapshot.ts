@@ -63,6 +63,7 @@ export function hydrateSnapshot(queryClient: QueryClient, snapshot: ServerSnapsh
     snapshot.habits.filter((habit) => Boolean(habit.archivedAt)),
   );
   queryClient.setQueryData(['habits', 'check-ins'], snapshot.habitCheckIns);
+  queryClient.setQueryData(['habits', 'skips'], snapshot.habitSkips ?? []);
   queryClient.setQueryData<SettingsState>(['settings'], (current) => ({
     integrations: snapshot.integrations,
     ai: snapshot.ai,

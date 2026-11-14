@@ -102,6 +102,7 @@ export function createSeedDatabase(now: Date = new Date()): Database {
       { id: 'hc12', habitId: 'h2', date: daysFromNow(-1, now), createdAt: daysAgo(1) },
       { id: 'hc13', habitId: 'h3', date: daysFromNow(0, now), createdAt: hoursAgo(8) },
     ],
+    habitSkips: [],
     profile: createDefaultProfile(now),
     counters: { p1: 4, p2: 4, p3: 3, p4: 3, p5: 1, p6: 1, none: 4 },
     projects: [

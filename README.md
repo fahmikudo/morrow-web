@@ -142,16 +142,17 @@ HeroUI ships pill buttons; `src/index.css` overrides `.button` to the field radi
 
 ### Habits
 
-- **Habit** is its own entity, not a recurring task: `{ title, areaId?, projectId?, cadence, target, schedule, startDate, endDate? }` with `HabitCheckIn { habitId, date }`. Success is measured per period (`4×/week`), so there is no instance spam and no second source of truth.
+- **Habit** is its own entity, not a recurring task: `{ title, areaId?, projectId?, cadence, target, schedule, startDate, endDate? }` with `HabitCheckIn { habitId, date }` and `HabitSkip { habitId, date }`. Success is measured per period (`4×/week`), so there is no instance spam and no second source of truth.
 - Cadence is `daily | weekly | monthly`; `target` is completions per period. `schedule` is either `flexible` (any day counts) or `fixed` with weekdays.
 - `startDate` and an optional inclusive `endDate` bound the habit. Progress, streaks, dots, due lists, calendar occurrences, and reminders ignore dates outside that range; after `endDate` the habit moves to the **Ended** tab with its final stats and check-in disabled, and editing the date or clearing it reopens the habit.
 - `startTime` / `endTime` (local `HH:mm`, optional) make a fixed habit a **timed occurrence**: the calendar renders it as a chip in the month grid (`06:30 – 07:15 Run 4× a week`) and as an entry in the day panel, where it can be checked in. Flexible habits keep the time as a suggestion but have no calendar day to sit on, so they only appear in Today/Habits.
 - The habit form's **Remind me** switch and reminder lead are server-backed: off sends `reminderEnabled: false`, while on clears it to inherit the global setting; the lead fires 5–60 minutes before `startTime` and shows any custom stored value. Both require a start time.
 - Weeks are **Monday–Sunday** (`WEEK_START_DAY` in `src/lib/habits.ts`); the calendar grid stays Sunday-first for display only.
 - One check-in per habit per day (`checkIn` is idempotent, `date` is local `YYYY-MM-DD`). Check-ins can be backfilled up to today from the calendar.
+- **Skip today** is the honest alternative to a fake check-in: a day-scoped `HabitSkip` that silences today's due prompt and reminder but does **not** count toward the target or break the week early. Check-in and skip are mutually exclusive per day (writing one clears the other), both actions are idempotent, and the skip is undoable from the row. For flexible quota habits a skip only silences today; the week can still be met. Skips are stored, exported, and never affect `habitProgress` or `habitStreak`.
 - Derived, never stored: `habitProgress`, `habitStreak` (an unfinished current period does not break the streak), `isHabitDueOn`, `habitDots`, `habitScheduleDates`.
 - Habit context follows the same inheritance rule as tasks/notes (`projectId` wins, otherwise `areaId`), but habits **do not** contribute to the project progress bar — project and area pages show them in their own section.
-- Surfaces: `/habits` (grouped by area, dots + streak + one-tap check-in, active/ended/archived tabs), a Today block with what is still due, sections on project and area detail, calendar markers with per-day toggles, and a `Habits` group in search.
+- Surfaces: `/habits` (grouped by area, dots + streak + one-tap check-in + skip today, active/ended/archived tabs), a Today block with what is still due, sections on project and area detail, calendar markers with per-day toggles, and a `Habits` group in search.
 - Interval habits ("every 3 days") are intentionally deferred; the cadence model above covers quota habits.
 
 ### Areas

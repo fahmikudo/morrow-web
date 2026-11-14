@@ -210,6 +210,33 @@ describe('mock repositories', () => {
     await expect(repos.habits.checkIn('missing', '2026-11-09')).rejects.toThrow('Habit not found');
   });
 
+  it('records skips per day and keeps them exclusive with check-ins', async () => {
+    const habit = await repos.habits.create({ title: 'Run', cadence: 'weekly', target: 3 });
+
+    const first = await repos.habits.skip(habit.id, '2026-11-09');
+    const second = await repos.habits.skip(habit.id, '2026-11-09');
+    expect(second.id).toBe(first.id);
+    expect((await repos.habits.listSkips()).filter((entry) => entry.habitId === habit.id)).toHaveLength(1);
+
+    await repos.habits.checkIn(habit.id, '2026-11-09');
+    expect((await repos.habits.listSkips()).some((entry) => entry.habitId === habit.id)).toBe(false);
+
+    await repos.habits.skip(habit.id, '2026-11-09');
+    expect((await repos.habits.listCheckIns()).some((entry) => entry.habitId === habit.id)).toBe(false);
+
+    await repos.habits.removeSkip(habit.id, '2026-11-09');
+    expect((await repos.habits.listSkips()).some((entry) => entry.habitId === habit.id)).toBe(false);
+
+    await repos.habits.skip(habit.id, '2026-11-09');
+    await repos.habits.remove(habit.id);
+    expect((await repos.habits.listSkips()).some((entry) => entry.habitId === habit.id)).toBe(false);
+
+    await expect(repos.habits.skip(habit.id, '09-11-2026')).rejects.toThrow(
+      'Use a YYYY-MM-DD date for skips',
+    );
+    await expect(repos.habits.skip('missing', '2026-11-09')).rejects.toThrow('Habit not found');
+  });
+
   it('archives, restores and deletes habits with their check-in history', async () => {
     const habit = await repos.habits.create({ title: 'Meditate', cadence: 'daily' });
     await repos.habits.checkIn(habit.id, '2026-11-09');

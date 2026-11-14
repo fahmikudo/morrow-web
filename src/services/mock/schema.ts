@@ -103,6 +103,13 @@ const habitCheckInSchema = z.object({
   createdAt: z.string(),
 });
 
+const habitSkipSchema = z.object({
+  id: z.string(),
+  habitId: z.string(),
+  date: z.string(),
+  createdAt: z.string(),
+});
+
 const eventSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -126,6 +133,8 @@ export const databaseSchema = z.object({
   areas: z.array(areaSchema),
   habits: z.array(habitSchema),
   habitCheckIns: z.array(habitCheckInSchema),
+  // Additive in v6: older payloads and server snapshots parse with no skips.
+  habitSkips: z.array(habitSkipSchema).default([]),
   profile: profileSchema,
   counters: z.record(z.string(), z.number()),
 });
